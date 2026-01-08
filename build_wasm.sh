@@ -2,7 +2,7 @@
 
 # Build script for WASM
 
-echo "Building Protein Viewer for WebAssembly..."
+echo "Building protdot for WebAssembly..."
 
 # Check if wasm32 target is installed
 if ! rustup target list | grep -q "wasm32-unknown-unknown (installed)"; then
@@ -19,7 +19,7 @@ mkdir -p web
 
 # Copy the WASM file
 echo "Copying files to web directory..."
-cp target/wasm32-unknown-unknown/release/protein_viewer.wasm web/
+cp target/wasm32-unknown-unknown/release/protdot.wasm web/
 
 # Copy HTML file
 cp index.html web/

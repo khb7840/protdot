@@ -231,8 +231,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "protein_viewer"
-version = "0.1.0"
+name = "protdot"
+version = "1.0.0"
 dependencies = [
  "macroquad",
  "yaml-rust",

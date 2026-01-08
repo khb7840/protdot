@@ -38,7 +38,7 @@ use std::env;
 #[cfg(target_arch = "wasm32")]
 const DEFAULT_PDB_DATA: &str = include_str!("../data/1G2F.pdb");
 
-#[macroquad::main("Protein Viewer")]
+#[macroquad::main("protdot")]
 async fn main() {
     // Load the protein
     #[cfg(not(target_arch = "wasm32"))]
