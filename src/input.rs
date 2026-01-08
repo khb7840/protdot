@@ -165,6 +165,11 @@ pub fn handle_animation_controls(anim: &mut AnimationState) {
     if is_key_pressed(KeyCode::Period) {
         anim.increase_speed();
     }
+    
+    // U key: Toggle reverse direction
+    if is_key_pressed(KeyCode::U) {
+        anim.toggle_reverse();
+    }
 }
 
 pub fn handle_camera_controls(cam: &mut Camera3D, cam_state: &mut CameraState) {

@@ -88,17 +88,22 @@ async fn main() {
         handle_radius_scale(&mut vis_state);
         handle_alpha(&mut vis_state);
         handle_animation_controls(&mut anim_state);
+        
+        // Must update camera controls first to get camera position
+        handle_camera_controls(&mut cam, &mut cam_state);
+        
+        // Then handle model rotation which calculates screen-space axes
         handle_model_rotation(&mut vis_state, &cam);
         ui_state.handle_toggles();
         
         #[cfg(not(target_arch = "wasm32"))]
         let export_format = handle_export();
         
-        handle_camera_controls(&mut cam, &mut cam_state);
-        
-        // Update animation
+        // Update animation using screen-space axes and camera angles
         let delta_time = get_frame_time();
-        anim_state.update(delta_time, &mut cam_state.angle_x, &mut cam_state.angle_y);
+        anim_state.update(delta_time, &mut vis_state.rotation,
+                         vis_state.camera_right, vis_state.camera_up, vis_state.camera_forward,
+                         &mut cam_state.angle_x, &mut cam_state.angle_y);
 
         // Clear and render
         clear_background(vis_state.bg_color);
@@ -149,6 +154,7 @@ async fn main() {
                         vis_state.render_mode,
                         &vis_state.color_maps,
                         vis_state.radius_scale,
+                        vis_state.alpha,
                         screen_width() as f32,
                         screen_height() as f32,
                         vis_state.rotation,

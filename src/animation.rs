@@ -18,6 +18,7 @@ pub struct AnimationState {
     pub speed: f32,
     pub time: f32,
     pub enabled: bool,
+    pub reverse: bool,
 }
 
 impl AnimationState {
@@ -33,40 +34,45 @@ impl AnimationState {
             speed: 2.0,
             time: 0.0,
             enabled,
+            reverse: false,
         }
     }
 
-    pub fn update(&mut self, delta_time: f32, angle_x: &mut f32, angle_y: &mut f32) {
+    pub fn update(&mut self, delta_time: f32, rotation: &mut Quat, camera_right: Vec3, camera_up: Vec3, camera_forward: Vec3, angle_x: &mut f32, angle_y: &mut f32) {
         if !self.enabled || self.mode == AnimationMode::None {
             return;
         }
 
         self.time += delta_time * self.speed;
+        let dt = delta_time * self.speed;
+        let direction = if self.reverse { -1.0 } else { 1.0 };
 
         match self.mode {
             AnimationMode::None => {},
             
             AnimationMode::RotateY => {
-                *angle_x += delta_time * self.speed * 0.5;
+                // Rotate around screen vertical axis (up)
+                let rot = Quat::from_axis_angle(camera_up, dt * 0.5 * direction);
+                *rotation = rot * *rotation;
             },
             
             AnimationMode::RotateX => {
-                *angle_y += delta_time * self.speed * 0.3;
-                *angle_y = angle_y.clamp(-1.5, 1.5);
+                // Rotate around screen horizontal axis (right)
+                let rot = Quat::from_axis_angle(camera_right, dt * 0.3 * direction);
+                *rotation = rot * *rotation;
             },
             
             AnimationMode::RotateZ => {
-                // Simulate Z rotation by combining X and Y
-                let base_x = *angle_x;
-                let base_y = *angle_y;
-                *angle_x = base_x + (self.time * 0.5).cos() * 0.02;
-                *angle_y = base_y + (self.time * 0.5).sin() * 0.02;
+                // Rotate around screen depth axis (forward) - clockwise
+                let rot = Quat::from_axis_angle(camera_forward, dt * 0.4 * direction);
+                *rotation = rot * *rotation;
             },
             
             AnimationMode::RotateXY => {
-                *angle_x += delta_time * self.speed * 0.4;
-                *angle_y += delta_time * self.speed * 0.2;
-                *angle_y = angle_y.clamp(-1.5, 1.5);
+                // Combined horizontal and vertical rotation
+                let rot_h = Quat::from_axis_angle(camera_right, dt * 0.2 * direction);
+                let rot_v = Quat::from_axis_angle(camera_up, dt * 0.4 * direction);
+                *rotation = rot_v * rot_h * *rotation;
             },
             
             AnimationMode::Orbit => {
@@ -94,6 +100,9 @@ impl AnimationState {
                 *angle_y = angle_y.clamp(-1.5, 1.5);
             },
         }
+        
+        // Normalize quaternion to prevent accumulation of error
+        *rotation = rotation.normalize();
     }
 
     pub fn next_mode(&mut self) {
@@ -123,7 +132,11 @@ impl AnimationState {
     }
 
     pub fn decrease_speed(&mut self) {
-        self.speed = (self.speed - 0.2).max(0.1);
+        self.speed = (self.speed - 0.2).max(0.0);
+    }
+
+    pub fn toggle_reverse(&mut self) {
+        self.reverse = !self.reverse;
     }
 
     pub fn mode_name(&self) -> &str {

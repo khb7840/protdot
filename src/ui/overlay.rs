@@ -39,9 +39,10 @@ pub fn draw_info_overlay(
     
     // Animation info
     let anim_status = if anim_state.enabled { "ON" } else { "OFF" };
-    draw_text(&format!("T: Anim {} ({})", anim_state.mode_name(), anim_status), 10.0, 200.0, 20.0, GRAY);
+    let reverse_indicator = if anim_state.reverse { " REV" } else { "" };
+    draw_text(&format!("T: Anim {} ({}{})", anim_state.mode_name(), anim_status, reverse_indicator), 10.0, 200.0, 20.0, GRAY);
     if anim_state.enabled {
-        draw_text(&format!("Y: Next Anim | ,/.: Speed {:.1}x", anim_state.speed), 10.0, 220.0, 20.0, GRAY);
+        draw_text(&format!("Y: Next | ,/.: Speed {:.1}x | U: Reverse", anim_state.speed), 10.0, 220.0, 20.0, GRAY);
         draw_text("H: Hide UI | P: Color Picker", 10.0, 240.0, 20.0, GRAY);
         #[cfg(not(target_arch = "wasm32"))]
         draw_text("X: PNG | V: SVG", 10.0, 260.0, 20.0, GRAY);
