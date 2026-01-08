@@ -183,15 +183,6 @@ impl ColorMaps {
         }
     }
     
-    pub fn next_mapping(&mut self) {
-        // Cycle through 24 different mappings:
-        // - 6 element rotations × 4 aa_group rotations = 12 combinations
-        // - × 2 gradient directions = 24 total mappings
-        self.mapping_index = (self.mapping_index + 1) % 24;
-        self.mapping_rotation_element = self.mapping_index % 6;
-        self.mapping_rotation_aa = (self.mapping_index / 6) % 4;
-    }
-    
     pub fn next_mapping_smart(&mut self, color_scheme: crate::types::ColorScheme) {
         use crate::types::ColorScheme;
         
