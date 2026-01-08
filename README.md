@@ -13,7 +13,7 @@ cargo build --release
 ### Web
 ```bash
 ./build_wasm.sh
-cd web && python3 -m http.server 8000
+cd docs && python3 -m http.server 8000
 ```
 
 ## Controls

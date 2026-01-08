@@ -14,25 +14,25 @@ fi
 echo "Compiling to WASM..."
 cargo build --release --target wasm32-unknown-unknown
 
-# Create web directory if it doesn't exist
-mkdir -p web
+# Create docs directory if it doesn't exist
+mkdir -p docs
 
 # Copy the WASM file
-echo "Copying files to web directory..."
-cp target/wasm32-unknown-unknown/release/protdot.wasm web/
+echo "Copying files to docs directory..."
+cp target/wasm32-unknown-unknown/release/protdot.wasm docs/
 
 # Copy HTML file
-cp index.html web/
+cp index.html docs/
 
 # Download macroquad's JS glue code
 echo "Downloading macroquad JS glue code..."
-curl -s https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js > web/mq_js_bundle.js
+curl -s https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js > docs/mq_js_bundle.js
 
 echo ""
 echo "✅ Build complete!"
 echo ""
 echo "To run the web app:"
-echo "1. cd web"
+echo "1. cd docs"
 echo "2. python3 -m http.server 8000"
 echo "3. Open http://localhost:8000 in your browser"
 echo ""
