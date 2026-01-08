@@ -3,12 +3,14 @@ use macroquad::prelude::*;
 pub struct CameraState {
     pub angle_x: f32,
     pub angle_y: f32,
+    pub angle_z: f32,  // Roll angle
     pub velocity_x: f32,
     pub velocity_y: f32,
     pub radius: f32,
     pub pan_offset: Vec3,
     pub prev_mouse_pos: (f32, f32),
     pub mouse_was_down: bool,
+    pub rotation_speed: f32,  // Keyboard rotation speed
 }
 
 impl CameraState {
@@ -16,12 +18,14 @@ impl CameraState {
         Self {
             angle_x: 0.0,
             angle_y: 0.0,
+            angle_z: 0.0,
             velocity_x: 0.0,
             velocity_y: 0.0,
             radius: initial_radius,
             pan_offset: vec3(0.0, 0.0, 0.0),
             prev_mouse_pos: (0.0, 0.0),
             mouse_was_down: false,
+            rotation_speed: 0.02,
         }
     }
 }

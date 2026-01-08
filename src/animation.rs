@@ -22,11 +22,17 @@ pub struct AnimationState {
 
 impl AnimationState {
     pub fn new() -> Self {
+        #[cfg(target_arch = "wasm32")]
+        let enabled = true;
+        
+        #[cfg(not(target_arch = "wasm32"))]
+        let enabled = false;
+        
         Self {
             mode: AnimationMode::Wobble,
             speed: 2.0,
             time: 0.0,
-            enabled: true,
+            enabled,
         }
     }
 

@@ -12,14 +12,23 @@ mod camera_state;
 mod visualization_state;
 mod animation;
 
+#[cfg(not(target_arch = "wasm32"))]
+mod export;
+
 // Use declarations
 use pdb_parser::load_pdb;
 use camera::{calculate_bounding_box, calculate_initial_radius};
 use ui::{UIState, ColorPickerState, draw_info_overlay, draw_color_picker, render_atoms};
-use input::{handle_mode_switches, handle_radius_scale, handle_alpha, handle_export, handle_camera_controls, handle_animation_controls};
+use input::{handle_mode_switches, handle_radius_scale, handle_alpha, handle_camera_controls, handle_animation_controls, handle_model_rotation};
 use camera_state::CameraState;
 use visualization_state::VisualizationState;
 use animation::AnimationState;
+
+#[cfg(not(target_arch = "wasm32"))]
+use input::handle_export;
+
+#[cfg(not(target_arch = "wasm32"))]
+use export::{ExportFormat, export_svg};
 
 // For native builds, use command line args
 #[cfg(not(target_arch = "wasm32"))]
@@ -61,6 +70,14 @@ async fn main() {
     // State management
     let mut cam_state = CameraState::new(initial_radius);
     let mut vis_state = VisualizationState::new();
+    
+    // Try to load custom color palette (CLI only)
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Err(e) = vis_state.color_maps.merge_with_file("color_palette.yaml") {
+        eprintln!("Note: Could not load color_palette.yaml (using defaults): {}", e);
+    }
+    
+    vis_state.initial_camera_pos = cam.position;
     let mut ui_state = UIState::new();
     let mut anim_state = AnimationState::new();
     let mut picker_state = ColorPickerState::new();
@@ -71,8 +88,11 @@ async fn main() {
         handle_radius_scale(&mut vis_state);
         handle_alpha(&mut vis_state);
         handle_animation_controls(&mut anim_state);
+        handle_model_rotation(&mut vis_state, &cam);
         ui_state.handle_toggles();
-        let should_export = handle_export();
+        
+        #[cfg(not(target_arch = "wasm32"))]
+        let export_format = handle_export();
         
         handle_camera_controls(&mut cam, &mut cam_state);
         
@@ -86,14 +106,23 @@ async fn main() {
 
         // Render atoms
         render_atoms(&atoms, &cam, vis_state.color_scheme, vis_state.render_mode, 
-                    &vis_state.color_maps, vis_state.radius_scale, vis_state.alpha);
+                    &vis_state.color_maps, vis_state.radius_scale, vis_state.alpha,
+                    vis_state.rotation,
+                    vis_state.translation,
+                    (vis_state.camera_right, vis_state.camera_up, vis_state.camera_forward));
 
         // Switch to 2D for UI, &anim_state
         set_default_camera();
         
         if ui_state.show_ui {
-            draw_info_overlay(atoms.len(), vis_state.color_scheme, vis_state.render_mode, 
-                            vis_state.radius_scale, vis_state.alpha, &anim_state);
+            let theme_name = vis_state.color_maps.current_theme_name();
+            let residue_count = atoms.iter()
+                .map(|a| a.residue_num)
+                .collect::<std::collections::HashSet<_>>()
+                .len();
+            draw_info_overlay(atoms.len(), residue_count, vis_state.color_scheme, vis_state.render_mode, 
+                            vis_state.radius_scale, vis_state.alpha, &anim_state, theme_name, vis_state.color_maps.mapping_index,
+                            vis_state.color_maps.mapping_rotation_element, vis_state.color_maps.mapping_rotation_aa);
         }
         
         if ui_state.show_color_picker {
@@ -101,11 +130,36 @@ async fn main() {
         }
 
 
-        // Export PNG before frame swap (capture current rendered frame)
-        if should_export {
-            let image = get_screen_data();
-            image.export_png("protein_export.png");
-            println!("Exported to protein_export.png");
+        // Export before frame swap (capture current rendered frame)
+        // Only available in native builds
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(format) = export_format {
+            match format {
+                ExportFormat::PNG => {
+                    let image = get_screen_data();
+                    image.export_png("protein_export.png");
+                    println!("✓ Exported to protein_export.png");
+                }
+                ExportFormat::SVG => {
+                    if let Err(e) = export_svg(
+                        &atoms,
+                        "protein_export.svg",
+                        &cam,
+                        vis_state.color_scheme,
+                        vis_state.render_mode,
+                        &vis_state.color_maps,
+                        vis_state.radius_scale,
+                        screen_width() as f32,
+                        screen_height() as f32,
+                        vis_state.rotation,
+                        vis_state.translation,
+                    ) {
+                        eprintln!("Failed to export SVG: {}", e);
+                    } else {
+                        println!("✓ Exported to protein_export.svg");
+                    }
+                }
+            }
         }
 
         next_frame().await;

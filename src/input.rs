@@ -4,14 +4,88 @@ use crate::camera_state::CameraState;
 use crate::visualization_state::VisualizationState;
 use crate::animation::AnimationState;
 
+pub fn handle_model_rotation(vis: &mut VisualizationState, cam: &Camera3D) {
+    // Calculate screen-space axes based on current camera view
+    // These axes are recalculated each frame to always match the screen orientation
+    let view_dir = (cam.target - cam.position).normalize();
+    let right = view_dir.cross(vec3(0.0, 1.0, 0.0)).normalize();
+    let up = right.cross(view_dir).normalize();
+    
+    // Store for rendering
+    vis.camera_right = right;
+    vis.camera_up = up;
+    vis.camera_forward = view_dir;
+    
+    // W/S: Rotate around camera's horizontal axis (screen X - up/down)
+    if is_key_down(KeyCode::W) {
+        let rot = Quat::from_axis_angle(right, -vis.rotation_speed);
+        vis.rotation = rot * vis.rotation;
+    }
+    if is_key_down(KeyCode::S) {
+        let rot = Quat::from_axis_angle(right, vis.rotation_speed);
+        vis.rotation = rot * vis.rotation;
+    }
+    
+    // A/D: Rotate around camera's vertical axis (screen Y - left/right)
+    if is_key_down(KeyCode::A) {
+        let rot = Quat::from_axis_angle(up, -vis.rotation_speed);
+        vis.rotation = rot * vis.rotation;
+    }
+    if is_key_down(KeyCode::D) {
+        let rot = Quat::from_axis_angle(up, vis.rotation_speed);
+        vis.rotation = rot * vis.rotation;
+    }
+    
+    // Q/E: Rotate around camera's view axis (screen Z - roll clockwise/counterclockwise)
+    if is_key_down(KeyCode::Q) {
+        let rot = Quat::from_axis_angle(view_dir, -vis.rotation_speed);
+        vis.rotation = rot * vis.rotation;
+    }
+    if is_key_down(KeyCode::E) {
+        let rot = Quat::from_axis_angle(view_dir, vis.rotation_speed);
+        vis.rotation = rot * vis.rotation;
+    }
+    
+    // Normalize quaternion to prevent accumulation of error
+    vis.rotation = vis.rotation.normalize();
+    
+    // Arrow keys: Translation in screen space
+    if is_key_down(KeyCode::Up) {
+        vis.translation += up * vis.translation_speed;
+    }
+    if is_key_down(KeyCode::Down) {
+        vis.translation -= up * vis.translation_speed;
+    }
+    if is_key_down(KeyCode::Left) {
+        vis.translation -= right * vis.translation_speed;
+    }
+    if is_key_down(KeyCode::Right) {
+        vis.translation += right * vis.translation_speed;
+    }
+    
+    // Rotation speed adjustment with ( and ) keys (Shift+9 and Shift+0)
+    if is_key_pressed(KeyCode::Key9) && is_key_down(KeyCode::LeftShift) {  // (
+        vis.rotation_speed = (vis.rotation_speed - 0.005).max(0.005);
+    }
+    if is_key_pressed(KeyCode::Key0) && is_key_down(KeyCode::LeftShift) {  // )
+        vis.rotation_speed = (vis.rotation_speed + 0.005).min(0.1);
+    }
+}
+
 pub fn handle_mode_switches(vis: &mut VisualizationState) {
+    // R key: Reset to defaults
+    if is_key_pressed(KeyCode::R) {
+        vis.reset();
+    }
+    
     if is_key_pressed(KeyCode::C) {
         vis.color_scheme = match vis.color_scheme {
             ColorScheme::ByElement => ColorScheme::ByAminoAcidGroup,
             ColorScheme::ByAminoAcidGroup => ColorScheme::ByAminoAcidType,
             ColorScheme::ByAminoAcidType => ColorScheme::NToCGradient,
             ColorScheme::NToCGradient => ColorScheme::RandomChain,
-            ColorScheme::RandomChain => ColorScheme::ByElement,
+            ColorScheme::RandomChain => ColorScheme::Theme,
+            ColorScheme::Theme => ColorScheme::ByElement,
         };
     }
     
@@ -20,6 +94,16 @@ pub fn handle_mode_switches(vis: &mut VisualizationState) {
             RenderMode::PerAtom => RenderMode::PerResidue,
             RenderMode::PerResidue => RenderMode::PerAtom,
         };
+    }
+    
+    // M key: Cycle through themes
+    if is_key_pressed(KeyCode::M) {
+        vis.color_maps.next_theme();
+    }
+    
+    // N key: Cycle through color mappings within current theme
+    if is_key_pressed(KeyCode::N) {
+        vis.color_maps.next_mapping_smart(vis.color_scheme);
     }
 }
 
@@ -44,18 +128,28 @@ pub fn handle_alpha(vis: &mut VisualizationState) {
     }
 }
 
-pub fn handle_export() -> bool {
-    is_key_pressed(KeyCode::E)
+#[cfg(not(target_arch = "wasm32"))]
+use crate::export::ExportFormat;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn handle_export() -> Option<ExportFormat> {
+    if is_key_pressed(KeyCode::V) {
+        Some(ExportFormat::SVG)
+    } else if is_key_pressed(KeyCode::X) {
+        Some(ExportFormat::PNG)
+    } else {
+        None
+    }
 }
 
 pub fn handle_animation_controls(anim: &mut AnimationState) {
-    // A key: Toggle animation on/off
-    if is_key_pressed(KeyCode::A) {
+    // T key: Toggle animation on/off
+    if is_key_pressed(KeyCode::T) {
         anim.toggle();
     }
     
-    // N key: Next animation mode
-    if is_key_pressed(KeyCode::N) {
+    // Y key: Next animation mode
+    if is_key_pressed(KeyCode::Y) {
         anim.next_mode();
         if !anim.enabled {
             anim.enabled = true;

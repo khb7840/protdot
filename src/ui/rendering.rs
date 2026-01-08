@@ -12,11 +12,31 @@ pub fn render_atoms(
     color_maps: &ColorMaps,
     radius_scale: f32,
     alpha: f32,
+    rotation: Quat,
+    translation: Vec3,
+    camera_axes: (Vec3, Vec3, Vec3),
 ) {
     match render_mode {
-        RenderMode::PerResidue => render_per_residue(atoms, cam, color_scheme, color_maps, radius_scale, alpha),
-        RenderMode::PerAtom => render_per_atom(atoms, cam, color_scheme, color_maps, radius_scale, alpha),
+        RenderMode::PerResidue => render_per_residue(atoms, cam, color_scheme, color_maps, radius_scale, alpha, rotation, translation, camera_axes),
+        RenderMode::PerAtom => render_per_atom(atoms, cam, color_scheme, color_maps, radius_scale, alpha, rotation, translation, camera_axes),
     }
+}
+
+// Apply rotation transformation to a position
+fn rotate_position(pos: Vec3, rotation: Quat, translation: Vec3, _camera_axes: (Vec3, Vec3, Vec3)) -> Vec3 {
+    // Apply accumulated rotation and then translation
+    // In gl-rs/glam/macroquad, rot * vec applies the rotation to the vector
+    (rotation * pos) + translation
+}
+
+// Rotate a point around an arbitrary axis using Rodrigues' rotation formula
+// Keep strictly for non-standard use cases if any, otherwise unused
+fn rotate_around_axis(p: Vec3, axis: Vec3, angle: f32) -> Vec3 {
+    let cos_a = angle.cos();
+    let sin_a = angle.sin();
+    let axis = axis.normalize();
+    
+    p * cos_a + axis.cross(p) * sin_a + axis * axis.dot(p) * (1.0 - cos_a)
 }
 
 fn render_per_residue(
@@ -26,6 +46,9 @@ fn render_per_residue(
     color_maps: &ColorMaps,
     radius_scale: f32,
     alpha: f32,
+    rotation: Quat,
+    translation: Vec3,
+    camera_axes: (Vec3, Vec3, Vec3),
 ) {
     let mut residues: HashMap<i32, Vec<&Atom>> = HashMap::new();
     
@@ -47,13 +70,15 @@ fn render_per_residue(
             .fold(vec3(0.0, 0.0, 0.0), |acc, a| acc + a.position) 
             / res_atoms.len() as f32;
         
+        let rotated_center = rotate_position(center, rotation, translation, camera_axes);
+        
         let sphere_radius = res_atoms.iter()
             .map(|a| (a.position - center).length() + a.radius)
             .fold(0.0f32, |max, dist| max.max(dist));
         
         let color = get_color(color_scheme, res_atoms[0], *res_num, min_res, max_res, color_maps);
         
-        residue_data.push((*res_num, center, sphere_radius, color));
+        residue_data.push((*res_num, rotated_center, sphere_radius, color));
     }
     
     if alpha < 1.0 {
@@ -78,27 +103,31 @@ fn render_per_atom(
     color_maps: &ColorMaps,
     radius_scale: f32,
     alpha: f32,
+    rotation: Quat,
+    translation: Vec3,
+    camera_axes: (Vec3, Vec3, Vec3),
 ) {
     let min_res = atoms.iter().map(|a| a.residue_num).min().unwrap_or(0) as f32;
     let max_res = atoms.iter().map(|a| a.residue_num).max().unwrap_or(1) as f32;
     
-    let mut atom_data: Vec<(&Atom, Color)> = atoms.iter().map(|atom| {
+    let mut atom_data: Vec<(Vec3, f32, Color)> = atoms.iter().map(|atom| {
         let color = get_color(color_scheme, atom, atom.residue_num, min_res, max_res, color_maps);
-        (atom, color)
+        let rotated_pos = rotate_position(atom.position, rotation, translation, camera_axes);
+        (rotated_pos, atom.radius, color)
     }).collect();
     
     if alpha < 1.0 {
         atom_data.sort_by(|a, b| {
-            let dist_a = (a.0.position - cam.position).length();
-            let dist_b = (b.0.position - cam.position).length();
+            let dist_a = (a.0 - cam.position).length();
+            let dist_b = (b.0 - cam.position).length();
             dist_b.partial_cmp(&dist_a).unwrap()
         });
     }
     
-    for (atom, color) in atom_data {
-        let scaled_radius = atom.radius * radius_scale;
+    for (pos, radius, color) in atom_data {
+        let scaled_radius = radius * radius_scale;
         let color_with_alpha = Color::new(color.r, color.g, color.b, alpha);
-        draw_sphere(atom.position, scaled_radius, None, color_with_alpha);
+        draw_sphere(pos, scaled_radius, None, color_with_alpha);
     }
 }
 
@@ -113,16 +142,22 @@ fn get_color(
     match color_scheme {
         ColorScheme::ByElement => Atom::get_color_by_element(&atom.element, color_maps),
         ColorScheme::ByAminoAcidGroup => Atom::get_color_by_amino_acid_group(&atom.residue, color_maps),
-        ColorScheme::ByAminoAcidType => Atom::get_color_by_amino_acid_type(&atom.residue),
+        ColorScheme::ByAminoAcidType => Atom::get_color_by_amino_acid_type(&atom.residue, color_maps),
         ColorScheme::NToCGradient => {
             let t = (res_num as f32 - min_res) / (max_res - min_res).max(1.0);
+            let start = color_maps.gradient_start();
+            let end = color_maps.gradient_end();
             Color::from_rgba(
-                (50.0 + t * 205.0) as u8,
-                (100.0 + t * 155.0) as u8,
-                (255.0 - t * 155.0) as u8,
+                (start.r * (1.0 - t) + end.r * t * 255.0) as u8,
+                (start.g * (1.0 - t) + end.g * t * 255.0) as u8,
+                (start.b * (1.0 - t) + end.b * t * 255.0) as u8,
                 255
             )
         },
-        ColorScheme::RandomChain => seeded_random_color(res_num as u32),
+        ColorScheme::RandomChain => seeded_random_color(res_num as u32, color_maps),
+        ColorScheme::Theme => {
+            // Theme uses the same logic as ByElement but with themed colors
+            Atom::get_color_by_element(&atom.element, color_maps)
+        }
     }
 }

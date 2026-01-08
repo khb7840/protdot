@@ -26,5 +26,5 @@ pub fn calculate_bounding_box(atoms: &[crate::atom::Atom]) -> (Vec3, Vec3) {
 
 pub fn calculate_initial_radius(min_bound: Vec3, max_bound: Vec3) -> f32 {
     let structure_size = (max_bound - min_bound).length();
-    (structure_size * 0.9).max(40.0) // 0.9x for closer view, minimum 40
+    (structure_size * 1.1).max(40.0) // 1.1x for a slightly farther view, minimum 40
 }

@@ -40,8 +40,8 @@ impl ColorPickerState {
     pub fn get_current_color(&self, bg_color: Color, color_maps: &ColorMaps, current_item: &str) -> Color {
         match self.category {
             0 => bg_color,
-            1 => color_maps.elements.get(current_item).copied().unwrap_or(GRAY),
-            2 => color_maps.aa_groups.get(current_item).copied().unwrap_or(GRAY),
+            1 => color_maps.elements().get(current_item).copied().unwrap_or(GRAY),
+            2 => color_maps.aa_groups().get(current_item).copied().unwrap_or(GRAY),
             _ => GRAY,
         }
     }
@@ -72,8 +72,16 @@ impl ColorPickerState {
     pub fn apply_color_change(&self, new_color: Color, bg_color: &mut Color, color_maps: &mut ColorMaps, current_item: &str) {
         match self.category {
             0 => *bg_color = new_color,
-            1 => { color_maps.elements.insert(current_item.to_string(), new_color); },
-            2 => { color_maps.aa_groups.insert(current_item.to_string(), new_color); },
+            1 => { 
+                if let Some(theme) = color_maps.themes.get_mut(color_maps.current_theme_index) {
+                    theme.elements.insert(current_item.to_string(), new_color);
+                }
+            },
+            2 => { 
+                if let Some(theme) = color_maps.themes.get_mut(color_maps.current_theme_index) {
+                    theme.aa_groups.insert(current_item.to_string(), new_color);
+                }
+            },
             _ => {},
         }
     }

@@ -1,0 +1,84 @@
+# Color Palette Configuration for Protein Viewer
+# Colors are specified as hexcodes: #RRGGBB or #RRGGBBAA
+#
+# This file defines color themes that can be switched with the 'M' key.
+# Each theme provides colors for all coloring modes:
+# - By Element (C key): Atomic element colors
+# - By AA Group (C key): Amino acid group colors
+# - N->C Gradient (C key): Gradient along the protein chain
+#
+# Note: Individual amino acid type colors (aa_types) are generated automatically
+# from the theme's palette and do not need to be specified here.
+#
+# ========================================
+# THEME STRUCTURE EXAMPLE
+# ========================================
+
+themes:
+  # Default theme - reference structure
+  Default:
+    elements:
+      C: "#404040"      # Carbon - dark gray
+      O: "#F05050"      # Oxygen - red
+      N: "#5078F0"      # Nitrogen - blue
+      S: "#FFC832"      # Sulfur - yellow
+      H: "#DCDCDC"      # Hydrogen - light gray
+      P: "#FF8000"      # Phosphorus - orange
+    aa_groups:
+      Hydrophobic: "#FF9632"    # Orange
+      Polar: "#50DC64"          # Green
+      Positive: "#3278FF"       # Blue
+      Negative: "#FF3C3C"       # Red
+      Glycine: "#E6E6E6"        # Light gray
+    gradient:
+      start: "#3264FF"   # N-terminus - blue
+      end: "#FF6464"     # C-terminus - red
+
+  # ========================================
+  # ADDITIONAL THEMES
+  # ========================================
+
+  # Spectral theme - Rainbow spectrum colormap
+  # Based on ColorBrewer Spectral palette for scientific visualization
+  Spectral:
+    elements:
+      C: "#9E0142"      # Deep magenta
+      O: "#D53E4F"      # Red-orange
+      N: "#5E4FA2"      # Deep blue
+      S: "#FEE08B"      # Light yellow
+      H: "#E6F598"      # Pale yellow
+      P: "#FDAE61"      # Orange
+    aa_groups:
+      Hydrophobic: "#F46D43"    # Orange-red
+      Polar: "#ABD9E9"          # Light blue
+      Positive: "#74ADD1"       # Sky blue
+      Negative: "#D53E4F"       # Red
+      Glycine: "#FFFFBF"        # Pale yellow
+    gradient:
+      start: "#9E0142"   # Deep magenta
+      end: "#5E4FA2"     # Deep blue
+
+
+# ========================================
+# HOW TO ADD YOUR OWN THEME
+# ========================================
+#
+# 1. Copy the Default theme structure above
+# 2. Give it a unique name (e.g., "MyTheme:")
+# 3. Customize the colors using hex codes
+# 4. Save this file
+# 5. The theme will be available after restarting the viewer
+# 6. Press 'M' to cycle through all available themes
+#
+# Color Guidelines:
+# - Use contrasting colors for different elements
+# - Ensure sufficient brightness for visibility
+# - Test with both light and dark backgrounds
+# - Consider colorblind-friendly palettes
+#
+# Example hex colors:
+# Red tones: #FF0000, #DC143C, #B22222
+# Blue tones: #0000FF, #4169E1, #1E90FF
+# Green tones: #00FF00, #32CD32, #228B22
+# Yellow tones: #FFFF00, #FFD700, #FFA500
+# Purple tones: #800080, #9370DB, #BA55D3

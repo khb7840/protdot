@@ -11,4 +11,5 @@ pub enum ColorScheme {
     ByAminoAcidType,
     NToCGradient,
     RandomChain,
+    Theme,
 }

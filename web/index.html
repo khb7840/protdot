@@ -25,6 +25,8 @@
         canvas {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             border-radius: 8px;
+            width: 100vw;
+            height: 100vh;
         }
         
         #info {
@@ -102,18 +104,6 @@
         // Configuration
         const loadingDiv = document.getElementById("loading");
         const infoDiv = document.getElementById("info");
-        
-        // Set canvas size to window size
-        function resizeCanvas() {
-            const glcanvas = document.getElementById("glcanvas");
-            if (glcanvas) {
-                glcanvas.width = window.innerWidth;
-                glcanvas.height = window.innerHeight;
-            }
-        }
-        
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
         
         // Show info panel when WASM is loaded
         window.addEventListener('load', () => {
