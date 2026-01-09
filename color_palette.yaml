@@ -33,6 +33,7 @@ themes:
     gradient:
       start: "#3264FF"   # N-terminus - blue
       end: "#FF6464"     # C-terminus - red
+    background: "#D3D3D3"  # Light gray background
 
   # ========================================
   # ADDITIONAL THEMES
@@ -40,23 +41,24 @@ themes:
 
   # Spectral theme - Rainbow spectrum colormap
   # Based on ColorBrewer Spectral palette for scientific visualization
-  Spectral:
+  "Retro Spectral":
     elements:
-      C: "#9E0142"      # Deep magenta
-      O: "#D53E4F"      # Red-orange
-      N: "#5E4FA2"      # Deep blue
-      S: "#FEE08B"      # Light yellow
-      H: "#E6F598"      # Pale yellow
-      P: "#FDAE61"      # Orange
+      C: "#F4A261"      # Orange
+      O: "#E76F51"      # Red-orange
+      N: "#264653"      # Navy
+      S: "#2A9D8F"      # Green
+      H: "#E9C46A"      # Yellow
+      P: "#E9C46A"      # Yellow
     aa_groups:
-      Hydrophobic: "#F46D43"    # Orange-red
-      Polar: "#ABD9E9"          # Light blue
-      Positive: "#74ADD1"       # Sky blue
-      Negative: "#D53E4F"       # Red
-      Glycine: "#FFFFBF"        # Pale yellow
+      Hydrophobic: "#2A9D8F"    # Green
+      Polar: "#E76F51"          # Red-orange
+      Positive: "#F4A261"       # orange
+      Negative: "#264653"       # navy
+      Glycine: "#E9C46A"        # yellow
     gradient:
-      start: "#9E0142"   # Deep magenta
-      end: "#5E4FA2"     # Deep blue
+      start: "#F4A261"   # Deep magenta
+      end: "#2A9D8F"     # Deep blue
+    background: "#FAFAFA"  # Off-white background
 
 
 # ========================================
@@ -65,10 +67,11 @@ themes:
 #
 # 1. Copy the Default theme structure above
 # 2. Give it a unique name (e.g., "MyTheme:")
-# 3. Customize the colors using hex codes
+# 3. Customize the colors using hex codes (including background)
 # 4. Save this file
 # 5. The theme will be available after restarting the viewer
-# 6. Press 'M' to cycle through all available themes
+# 6. YAML themes appear FIRST when cycling with 'M' key
+# 7. Press 'M' to cycle themes, 'N' for next mapping, 'Shift+N' for previous
 #
 # Color Guidelines:
 # - Use contrasting colors for different elements

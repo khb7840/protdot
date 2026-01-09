@@ -9,6 +9,7 @@ pub struct Theme {
     pub aa_types: HashMap<String, Color>,
     pub gradient_start: Color,
     pub gradient_end: Color,
+    pub background: Color,
 }
 
 pub fn create_builtin_themes() -> Vec<Theme> {
@@ -39,6 +40,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: default_aa_types.clone(),
         gradient_start: Color::from_rgba(50, 100, 255, 255),
         gradient_end: Color::from_rgba(255, 100, 100, 255),
+        background: Color::from_rgba(211, 211, 211, 255),  // LIGHTGRAY
     });
     
     // Myth-Bursting - Space Cadet, Keppel, Orange-Yellow, Yellow Orange, Razzmatazz
@@ -71,6 +73,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&myth_elements, &myth_aa_groups, colors[0], colors[4]),
         gradient_start: colors[0],
         gradient_end: colors[4],
+        background: Color::from_rgba(240, 240, 235, 255),
     });
     
     // Resistance To Love - Black, Space Cadet, Dark Slate Blue, Dark Pink, Rajah, Purple Plum
@@ -104,6 +107,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&resist_elements, &resist_aa_groups, colors[1], colors[3]),
         gradient_start: colors[1],
         gradient_end: colors[3],
+        background: Color::from_rgba(20, 20, 25, 255),  // Dark background
     });
     
     // Attractive Vintage - Sunset Orange, Sandy Brown, Seashell, Dark Lavender, Cosmic Cobalt, Fiery Rose
@@ -137,6 +141,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&vintage_elements, &vintage_aa_groups, colors[4], colors[5]),
         gradient_start: colors[4],
         gradient_end: colors[5],
+        background: colors[2],  // Seashell
     });
     
     // Desi Istyle - Earth Yellow, Copper Red, Deep Puce, Imperial, Cookies And Cream
@@ -169,6 +174,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&desi_elements, &desi_aa_groups, colors[3], colors[0]),
         gradient_start: colors[3],
         gradient_end: colors[0],
+        background: colors[4],  // Cookies And Cream
     });
     
     // Juggle The Rainbow - Yellow-Green, Bleu De France, Dark Lavender, Electric Pink, Deep Saffron, Deep Lemon
@@ -202,6 +208,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&juggle_elements, &juggle_aa_groups, colors[2], colors[3]),
         gradient_start: colors[2],
         gradient_end: colors[3],
+        background: Color::from_rgba(245, 245, 250, 255),
     });
     
     // Indian Marriage - Dark Lemon Lime, Sandstorm, Beer, Pantone Magenta, Crayola's Violet, Dark Cornflower Blue
@@ -235,6 +242,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&indian_elements, &indian_aa_groups, colors[5], colors[3]),
         gradient_start: colors[5],
         gradient_end: colors[3],
+        background: Color::from_rgba(250, 245, 235, 255),
     });
     
     // Cream Truck - Navajo White, Chinese Purple, Maya Blue, French Rose, Cosmic Latte, Ceil
@@ -268,6 +276,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&cream_elements, &cream_aa_groups, colors[1], colors[3]),
         gradient_start: colors[1],
         gradient_end: colors[3],
+        background: colors[4],  // Cosmic Latte
     });
     
     // Fakes Are For Free - Spicy Mix, Macaroni And Cheese, Navajo White, Air Superiority Blue, B'dazzled Blue
@@ -300,6 +309,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&fakes_elements, &fakes_aa_groups, colors[4], colors[1]),
         gradient_start: colors[4],
         gradient_end: colors[1],
+        background: colors[2],  // Navajo White
     });
     
     // Industrial Use - Japanese Indigo, Carmine Pink, Bright Gray, Tufts Blue, Vampire Black
@@ -332,6 +342,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&industrial_elements, &industrial_aa_groups, colors[0], colors[1]),
         gradient_start: colors[0],
         gradient_end: colors[1],
+        background: colors[4],  // Vampire Black
     });
     
     // Spring Sunset - Rich Electric Blue, Moonstone, Deep Peach, Pastel Red, Fuchsia Rose, Maximum Purple
@@ -365,6 +376,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&spring_elements, &spring_aa_groups, colors[5], colors[3]),
         gradient_start: colors[5],
         gradient_end: colors[3],
+        background: Color::from_rgba(250, 245, 240, 255),
     });
     
     // Alone With Thoughts - Deep Taupe, Rose Gold, Desert Sand, Jelly Bean Blue, Dark Slate Blue
@@ -397,6 +409,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&alone_elements, &alone_aa_groups, colors[0], colors[3]),
         gradient_start: colors[0],
         gradient_end: colors[3],
+        background: colors[2],  // Desert Sand
     });
     
     // Naughty Generation X - Dark Cornflower Blue, Maximum Blue, Navajo White, Pantone Pink
@@ -428,6 +441,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&naughty_elements, &naughty_aa_groups, colors[0], colors[3]),
         gradient_start: colors[0],
         gradient_end: colors[3],
+        background: colors[2],  // Navajo White
     });
     
     // Cleaning Wounds - Verdigris, Deep Champagne, China Pink, Midnight, Cosmic Cobalt
@@ -460,6 +474,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&cleaning_elements, &cleaning_aa_groups, colors[4], colors[2]),
         gradient_start: colors[4],
         gradient_end: colors[2],
+        background: Color::from_rgba(25, 25, 30, 255),  // Dark background
     });
     
     // Another World - Steel Blue, Arylide Yellow, Green Sheen, Maximum Blue, Pastel Gray, B'dazzled Blue
@@ -493,6 +508,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&another_elements, &another_aa_groups, colors[5], colors[1]),
         gradient_start: colors[5],
         gradient_end: colors[1],
+        background: colors[4],  // Pastel Gray
     });
     
     // Fire Mountain - Dark Midnight Blue, Blue Sapphire, Sea Blue, Crayola's Yellow, Middle Red, Chinese Orange
@@ -526,6 +542,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&fire_elements, &fire_aa_groups, colors[0], colors[5]),
         gradient_start: colors[0],
         gradient_end: colors[5],
+        background: colors[0],  // Dark Midnight Blue
     });
     
     // Beautiful Sundowners - American Blue, Coral Reef, Jasmine, Middle Green Yellow, Myrtle Green
@@ -558,6 +575,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&sundowners_elements, &sundowners_aa_groups, colors[0], colors[1]),
         gradient_start: colors[0],
         gradient_end: colors[1],
+        background: Color::from_rgba(250, 245, 238, 255),
     });
     
     // Bad For Economy - Deep Space Sparkle, Gunmetal, English Violet, Sugar Plum, Mauvelous, Bisque
@@ -591,6 +609,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&bad_elements, &bad_aa_groups, colors[1], colors[4]),
         gradient_start: colors[1],
         gradient_end: colors[4],
+        background: colors[5],  // Bisque
     });
     
     // Indian Drama - Pale Red-Violet, Purpureus, Pixie Powder, Royal Purple, Congo Pink, Topaz
@@ -624,6 +643,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&drama_elements, &drama_aa_groups, colors[2], colors[4]),
         gradient_start: colors[2],
         gradient_end: colors[4],
+        background: Color::from_rgba(250, 245, 250, 255),
     });
     
     // Retro Base - Rose Gold, Fawn, Wintergreen Dream, Tuscany
@@ -655,6 +675,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&retro_base_elements, &retro_base_aa_groups, colors[3], colors[0]),
         gradient_start: colors[3],
         gradient_end: colors[0],
+        background: Color::from_rgba(245, 238, 230, 255),
     });
     
     // String Of Holidays - Crayola's Forest Green, Deep Green-Cyan Turquoise, Deep Koamaru, Burnt Umber, Ochre, Dark Tangerine
@@ -688,6 +709,7 @@ pub fn create_builtin_themes() -> Vec<Theme> {
         aa_types: generate_aa_types_from_palette(&holidays_elements, &holidays_aa_groups, colors[2], colors[5]),
         gradient_start: colors[2],
         gradient_end: colors[5],
+        background: Color::from_rgba(30, 35, 45, 255),  // Dark background
     });
     
     themes

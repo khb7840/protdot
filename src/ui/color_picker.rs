@@ -20,10 +20,11 @@ impl ColorPickerState {
             self.index = 0;
         }
         
-        if is_key_pressed(KeyCode::Up) && self.index > 0 {
+        // Use J/K for navigation instead of arrow keys (which are used for translation)
+        if is_key_pressed(KeyCode::K) && self.index > 0 {
             self.index -= 1;
         }
-        if is_key_pressed(KeyCode::Down) && self.index < items_len.saturating_sub(1) {
+        if is_key_pressed(KeyCode::J) && self.index < items_len.saturating_sub(1) {
             self.index += 1;
         }
     }
@@ -71,7 +72,13 @@ impl ColorPickerState {
     
     pub fn apply_color_change(&self, new_color: Color, bg_color: &mut Color, color_maps: &mut ColorMaps, current_item: &str) {
         match self.category {
-            0 => *bg_color = new_color,
+            0 => {
+                *bg_color = new_color;
+                // Also update theme background
+                if let Some(theme) = color_maps.themes.get_mut(color_maps.current_theme_index) {
+                    theme.background = new_color;
+                }
+            },
             1 => { 
                 if let Some(theme) = color_maps.themes.get_mut(color_maps.current_theme_index) {
                     theme.elements.insert(current_item.to_string(), new_color);
@@ -110,7 +117,7 @@ pub fn draw_color_picker(
     picker_state.handle_navigation(items.len());
     
     let current_item = &items[picker_state.index];
-    draw_text(&format!("Item (↑↓): {}", current_item), panel_x + 10.0, panel_y + 80.0, 18.0, WHITE);
+    draw_text(&format!("Item (J/K): {}", current_item), panel_x + 10.0, panel_y + 80.0, 18.0, WHITE);
     
     let current_color = picker_state.get_current_color(*bg_color, color_maps, current_item);
     
@@ -134,7 +141,7 @@ pub fn draw_color_picker(
     draw_text("Preview", panel_x + 100.0, panel_y + 228.0, 18.0, LIGHTGRAY);
     
     draw_text("Tab: change category", panel_x + 10.0, panel_y + 265.0, 14.0, DARKGRAY);
-    draw_text("↑↓: select item", panel_x + 10.0, panel_y + 280.0, 14.0, DARKGRAY);
+    draw_text("J/K: select item", panel_x + 10.0, panel_y + 280.0, 14.0, DARKGRAY);
     
     let new_color = picker_state.handle_color_adjustment(current_color);
     

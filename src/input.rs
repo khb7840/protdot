@@ -98,12 +98,26 @@ pub fn handle_mode_switches(vis: &mut VisualizationState) {
     
     // M key: Cycle through themes
     if is_key_pressed(KeyCode::M) {
-        vis.color_maps.next_theme();
+        if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
+            // Shift+M: Previous theme
+            vis.color_maps.prev_theme();
+        } else {
+            // M: Next theme
+            vis.color_maps.next_theme();
+        }
+        // Update background color to match the new theme
+        vis.bg_color = vis.color_maps.current_background();
     }
     
     // N key: Cycle through color mappings within current theme
     if is_key_pressed(KeyCode::N) {
-        vis.color_maps.next_mapping_smart(vis.color_scheme);
+        if is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift) {
+            // Shift+N: Previous mapping
+            vis.color_maps.previous_mapping_smart(vis.color_scheme);
+        } else {
+            // N: Next mapping
+            vis.color_maps.next_mapping_smart(vis.color_scheme);
+        }
     }
 }
 

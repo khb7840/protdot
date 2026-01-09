@@ -27,13 +27,16 @@ impl VisualizationState {
         #[cfg(not(target_arch = "wasm32"))]
         let (radius_scale, render_mode) = (1.0, RenderMode::PerAtom);
         
+        let color_maps = ColorMaps::new();
+        let bg_color = color_maps.current_background();
+        
         Self {
             color_scheme: ColorScheme::ByElement,
             render_mode,
             radius_scale,
             alpha: 1.0,
-            bg_color: LIGHTGRAY,
-            color_maps: ColorMaps::new(),
+            bg_color,
+            color_maps,
             rotation: Quat::IDENTITY,
             rotation_speed: 0.02,
             translation: vec3(0.0, 0.0, 0.0),

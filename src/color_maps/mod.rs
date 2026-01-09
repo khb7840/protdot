@@ -97,8 +97,10 @@ impl ColorMaps {
             }
         }
         
-        // Parse themes
+        // Parse themes - collect them first to insert before built-in themes
         if let Some(themes_node) = doc["themes"].as_hash() {
+            let mut yaml_themes = Vec::new();
+            
             for (theme_name_yaml, theme_data) in themes_node {
                 if let Some(theme_name) = theme_name_yaml.as_str() {
                     // Start with default theme as base
@@ -113,6 +115,7 @@ impl ColorMaps {
                         aa_types: default_theme.aa_types,
                         gradient_start: default_theme.gradient_start,
                         gradient_end: default_theme.gradient_end,
+                        background: default_theme.background,
                     };
                     
                     // Parse theme elements
@@ -166,8 +169,20 @@ impl ColorMaps {
                         }
                     }
                     
-                    self.themes.push(theme);
+                    // Parse theme background
+                    if let Some(bg_hex) = theme_data["background"].as_str() {
+                        if let Some(color) = parse_hex_color(bg_hex) {
+                            theme.background = color;
+                        }
+                    }
+                    
+                    yaml_themes.push(theme);
                 }
+            }
+            
+            // Insert all YAML themes at the beginning (before built-in themes)
+            for theme in yaml_themes.into_iter().rev() {
+                self.themes.insert(0, theme);
             }
         }
         
@@ -177,6 +192,18 @@ impl ColorMaps {
     pub fn next_theme(&mut self) {
         if !self.themes.is_empty() {
             self.current_theme_index = (self.current_theme_index + 1) % self.themes.len();
+            self.mapping_index = 0; // Reset mapping when changing theme
+            self.mapping_rotation_element = 0;
+            self.mapping_rotation_aa = 0;
+        }
+    }
+    pub fn prev_theme(&mut self) {
+        if !self.themes.is_empty() {
+            if self.current_theme_index == 0 {
+                self.current_theme_index = self.themes.len() - 1;
+            } else {
+                self.current_theme_index -= 1;
+            }
             self.mapping_index = 0; // Reset mapping when changing theme
             self.mapping_rotation_element = 0;
             self.mapping_rotation_aa = 0;
@@ -200,6 +227,27 @@ impl ColorMaps {
         };
         
         self.mapping_index = (self.mapping_index + step) % 24;
+        self.mapping_rotation_element = self.mapping_index % 6;
+        self.mapping_rotation_aa = (self.mapping_index / 6) % 4;
+    }
+    
+    pub fn previous_mapping_smart(&mut self, color_scheme: crate::types::ColorScheme) {
+        use crate::types::ColorScheme;
+        
+        // Same step logic as next_mapping_smart
+        let step = match color_scheme {
+            ColorScheme::ByAminoAcidGroup => 6,
+            ColorScheme::ByAminoAcidType => 6,
+            ColorScheme::NToCGradient => 12,
+            _ => 1,
+        };
+        
+        // Go backwards with wrapping
+        self.mapping_index = if self.mapping_index >= step {
+            self.mapping_index - step
+        } else {
+            24 - (step - self.mapping_index)
+        };
         self.mapping_rotation_element = self.mapping_index % 6;
         self.mapping_rotation_aa = (self.mapping_index / 6) % 4;
     }
@@ -308,6 +356,10 @@ impl ColorMaps {
         } else {
             theme.gradient_start
         }
+    }
+    
+    pub fn current_background(&self) -> Color {
+        self.themes[self.current_theme_index].background
     }
 }
 
