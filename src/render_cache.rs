@@ -39,6 +39,8 @@ pub struct MolecularRenderer {
     // Mesh quality and batching configuration
     pub rings: usize,
     pub slices: usize,
+    pub residue_rings: usize,
+    pub residue_slices: usize,
     pub max_vertices_per_chunk: usize,
 }
 
@@ -54,9 +56,11 @@ impl MolecularRenderer {
             last_radius_scale: -1.0,
             is_dirty: true,
             cache: RenderCache::new(),
-            rings: 10,  // Default: smooth spheres
+            rings: 10,  // Default: smooth spheres for atoms
             slices: 10,
-            max_vertices_per_chunk: 1000,  // ~16 spheres at 10x10 quality
+            residue_rings: 20,  // Higher quality for residues (fewer objects)
+            residue_slices: 20,
+            max_vertices_per_chunk: 1000,  // ~16 spheres at 10x10 quality, ~7 at 16x16
         }
     }
 
@@ -101,8 +105,8 @@ impl MolecularRenderer {
             radius_scale,
             min_res,
             max_res,
-            self.rings,
-            self.slices,
+            self.residue_rings,
+            self.residue_slices,
             self.max_vertices_per_chunk,
         );
 
@@ -121,13 +125,13 @@ impl MolecularRenderer {
 }
 
 fn precompute_residues(atoms: &[Atom]) -> Vec<(Vec3, f32, i32, usize)> {
-    let mut temp_map: HashMap<i32, Vec<usize>> = HashMap::new();
+    let mut temp_map: HashMap<(String, i32), Vec<usize>> = HashMap::new();
     
     for (i, atom) in atoms.iter().enumerate() {
-        temp_map.entry(atom.residue_num).or_default().push(i);
+        temp_map.entry((atom.chain.clone(), atom.residue_num)).or_default().push(i);
     }
 
-    temp_map.into_iter().map(|(res_num, indices)| {
+    temp_map.into_iter().map(|((chain, res_num), indices)| {
         let center = indices.iter()
             .fold(vec3(0.0, 0.0, 0.0), |acc, &i| acc + atoms[i].position) 
             / indices.len() as f32;

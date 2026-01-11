@@ -6,6 +6,7 @@ pub struct Atom {
     pub atom_name: String,
     pub element: String,
     pub residue: String,
+    pub chain: String,
     pub residue_num: i32,
     pub position: Vec3,
     pub radius: f32,

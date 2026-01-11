@@ -54,6 +54,13 @@ fn parse_pdb_content(content: &str) -> Vec<Atom> {
                     "UNK".to_string()
                 };
                 
+                // Get chain identifier (usually at index 4)
+                let chain = if parts.len() > 4 {
+                    parts[4].to_string()
+                } else {
+                    "A".to_string()
+                };
+                
                 // Get residue number (usually at index 5)
                 let residue_num = if parts.len() > 5 {
                     parts[5].parse::<i32>().unwrap_or(0)
@@ -65,6 +72,7 @@ fn parse_pdb_content(content: &str) -> Vec<Atom> {
                     atom_name,
                     element: element.clone(),
                     residue,
+                    chain,
                     residue_num,
                     position: vec3(x, y, z),
                     radius: Atom::get_radius(&element),
