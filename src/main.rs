@@ -11,6 +11,7 @@ mod input;
 mod camera_state;
 mod visualization_state;
 mod animation;
+mod render_cache;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod export;
@@ -18,11 +19,12 @@ mod export;
 // Use declarations
 use pdb_parser::load_pdb;
 use camera::{calculate_bounding_box, calculate_initial_radius};
-use ui::{UIState, ColorPickerState, draw_info_overlay, draw_color_picker, render_atoms};
-use input::{handle_mode_switches, handle_radius_scale, handle_alpha, handle_camera_controls, handle_animation_controls, handle_model_rotation};
+use ui::{UIState, ColorPickerState, draw_info_overlay, draw_color_picker, render_atoms_optimized};
+use input::{handle_mode_switches, handle_radius_scale, handle_camera_controls, handle_animation_controls, handle_model_rotation};
 use camera_state::CameraState;
 use visualization_state::VisualizationState;
 use animation::AnimationState;
+use render_cache::MolecularRenderer;
 
 #[cfg(not(target_arch = "wasm32"))]
 use input::handle_export;
@@ -81,13 +83,37 @@ async fn main() {
     let mut ui_state = UIState::new();
     let mut anim_state = AnimationState::new();
     let mut picker_state = ColorPickerState::new();
+    let mut renderer = MolecularRenderer::new(&atoms);
+    
+    // Track state to detect changes
+    let mut last_color_scheme = vis_state.color_scheme;
+    let mut last_radius_scale = vis_state.radius_scale;
+    let mut last_mapping_index = vis_state.color_maps.mapping_index;
+    let mut last_mapping_rotation_element = vis_state.color_maps.mapping_rotation_element;
+    let mut last_mapping_rotation_aa = vis_state.color_maps.mapping_rotation_aa;
+    let mut last_theme_index = vis_state.color_maps.current_theme_index;
 
     loop {
         // Handle all input
         handle_mode_switches(&mut vis_state);
         handle_radius_scale(&mut vis_state);
-        handle_alpha(&mut vis_state);
         handle_animation_controls(&mut anim_state);
+        
+        // Mark renderer dirty if visual parameters changed
+        if vis_state.color_scheme != last_color_scheme 
+           || (vis_state.radius_scale - last_radius_scale).abs() > 0.001
+           || vis_state.color_maps.mapping_index != last_mapping_index
+           || vis_state.color_maps.mapping_rotation_element != last_mapping_rotation_element
+           || vis_state.color_maps.mapping_rotation_aa != last_mapping_rotation_aa
+           || vis_state.color_maps.current_theme_index != last_theme_index {
+            renderer.mark_dirty();
+            last_color_scheme = vis_state.color_scheme;
+            last_radius_scale = vis_state.radius_scale;
+            last_mapping_index = vis_state.color_maps.mapping_index;
+            last_mapping_rotation_element = vis_state.color_maps.mapping_rotation_element;
+            last_mapping_rotation_aa = vis_state.color_maps.mapping_rotation_aa;
+            last_theme_index = vis_state.color_maps.current_theme_index;
+        }
         
         // Must update camera controls first to get camera position
         handle_camera_controls(&mut cam, &mut cam_state);
@@ -110,8 +136,8 @@ async fn main() {
         set_camera(&cam);
 
         // Render atoms
-        render_atoms(&atoms, &cam, vis_state.color_scheme, vis_state.render_mode, 
-                    &vis_state.color_maps, vis_state.radius_scale, vis_state.alpha,
+        render_atoms_optimized(&mut renderer, &atoms, &cam, vis_state.color_scheme, vis_state.render_mode, 
+                    &vis_state.color_maps, vis_state.radius_scale,
                     vis_state.rotation,
                     vis_state.translation,
                     (vis_state.camera_right, vis_state.camera_up, vis_state.camera_forward));
@@ -126,7 +152,7 @@ async fn main() {
                 .collect::<std::collections::HashSet<_>>()
                 .len();
             draw_info_overlay(atoms.len(), residue_count, vis_state.color_scheme, vis_state.render_mode, 
-                            vis_state.radius_scale, vis_state.alpha, &anim_state, theme_name, vis_state.color_maps.mapping_index,
+                            vis_state.radius_scale, &anim_state, theme_name, vis_state.color_maps.mapping_index,
                             vis_state.color_maps.mapping_rotation_element, vis_state.color_maps.mapping_rotation_aa);
         }
         
@@ -154,7 +180,6 @@ async fn main() {
                         vis_state.render_mode,
                         &vis_state.color_maps,
                         vis_state.radius_scale,
-                        vis_state.alpha,
                         screen_width() as f32,
                         screen_height() as f32,
                         vis_state.rotation,

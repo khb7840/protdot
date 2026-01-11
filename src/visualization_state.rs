@@ -6,7 +6,6 @@ pub struct VisualizationState {
     pub color_scheme: ColorScheme,
     pub render_mode: RenderMode,
     pub radius_scale: f32,
-    pub alpha: f32,
     pub bg_color: Color,
     pub color_maps: ColorMaps,
     pub rotation: Quat,
@@ -34,7 +33,6 @@ impl VisualizationState {
             color_scheme: ColorScheme::ByElement,
             render_mode,
             radius_scale,
-            alpha: 1.0,
             bg_color,
             color_maps,
             rotation: Quat::IDENTITY,
@@ -58,7 +56,6 @@ impl VisualizationState {
         self.color_scheme = ColorScheme::ByElement;
         self.render_mode = render_mode;
         self.radius_scale = radius_scale;
-        self.alpha = 1.0;
         self.rotation = Quat::IDENTITY;
         self.translation = vec3(0.0, 0.0, 0.0);
         // Keep color_maps as they might have custom palettes loaded

@@ -133,14 +133,7 @@ pub fn handle_radius_scale(vis: &mut VisualizationState) {
     }
 }
 
-pub fn handle_alpha(vis: &mut VisualizationState) {
-    if is_key_pressed(KeyCode::LeftBracket) {
-        vis.alpha = (vis.alpha - 0.1).max(0.0);
-    }
-    if is_key_pressed(KeyCode::RightBracket) {
-        vis.alpha = (vis.alpha + 0.1).min(1.0);
-    }
-}
+
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::export::ExportFormat;

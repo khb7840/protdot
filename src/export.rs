@@ -21,7 +21,6 @@ pub fn export_svg(
     render_mode: RenderMode,
     color_maps: &ColorMaps,
     radius_scale: f32,
-    alpha: f32,
     screen_width: f32,
     screen_height: f32,
     rotation: Quat,
@@ -41,10 +40,10 @@ pub fn export_svg(
     
     match render_mode {
         RenderMode::PerAtom => {
-            render_svg_per_atom(&mut file, atoms, camera, color_scheme, color_maps, radius_scale, alpha, screen_width, screen_height, rotation, translation, tan_half_fov)?;
+            render_svg_per_atom(&mut file, atoms, camera, color_scheme, color_maps, radius_scale, screen_width, screen_height, rotation, translation, tan_half_fov)?;
         }
         RenderMode::PerResidue => {
-            render_svg_per_residue(&mut file, atoms, camera, color_scheme, color_maps, radius_scale, alpha, screen_width, screen_height, rotation, translation, tan_half_fov)?;
+            render_svg_per_residue(&mut file, atoms, camera, color_scheme, color_maps, radius_scale, screen_width, screen_height, rotation, translation, tan_half_fov)?;
         }
     }
     
@@ -61,7 +60,6 @@ fn render_svg_per_atom(
     color_scheme: ColorScheme,
     color_maps: &ColorMaps,
     radius_scale: f32,
-    alpha: f32,
     screen_width: f32,
     screen_height: f32,
     rotation: Quat,
@@ -95,12 +93,11 @@ fn render_svg_per_atom(
             scaled_radius * 50.0
         };
         
-        writeln!(file, r#"    <circle cx="{:.2}" cy="{:.2}" r="{:.2}" fill="rgb({},{},{})" fill-opacity="{:.2}" />"#,
+        writeln!(file, r#"    <circle cx="{:.2}" cy="{:.2}" r="{:.2}" fill="rgb({},{},{})" fill-opacity="1.0" />"#,
             screen_pos.x, screen_pos.y, radius,
             (color.r * 255.0) as u8,
             (color.g * 255.0) as u8,
-            (color.b * 255.0) as u8,
-            alpha
+            (color.b * 255.0) as u8
         )?;
     }
     
@@ -114,7 +111,6 @@ fn render_svg_per_residue(
     color_scheme: ColorScheme,
     color_maps: &ColorMaps,
     radius_scale: f32,
-    alpha: f32,
     screen_width: f32,
     screen_height: f32,
     rotation: Quat,
@@ -166,12 +162,11 @@ fn render_svg_per_residue(
             scaled_radius * 50.0
         };
         
-        writeln!(file, r#"    <circle cx="{:.2}" cy="{:.2}" r="{:.2}" fill="rgb({},{},{})" fill-opacity="{:.2}" />"#,
+        writeln!(file, r#"    <circle cx="{:.2}" cy="{:.2}" r="{:.2}" fill="rgb({},{},{})" fill-opacity="1.0" />"#,
             screen_pos.x, screen_pos.y, radius,
             (color.r * 255.0) as u8,
             (color.g * 255.0) as u8,
-            (color.b * 255.0) as u8,
-            alpha
+            (color.b * 255.0) as u8
         )?;
     }
     

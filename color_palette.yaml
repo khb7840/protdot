@@ -58,7 +58,7 @@ themes:
     gradient:
       start: "#F4A261"   # Deep magenta
       end: "#2A9D8F"     # Deep blue
-    background: "#FAFAFA"  # Off-white background
+    background: "#000000"  # Off-white background
 
 
 # ========================================
