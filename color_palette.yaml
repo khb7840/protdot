@@ -1,5 +1,6 @@
 # Color Palette Configuration for Protein Viewer
 # Colors are specified as hexcodes: #RRGGBB or #RRGGBBAA
+# Built-in palette inspirations are sourced from https://www.schemecolor.com
 #
 # This file defines color themes that can be switched with the 'M' key.
 # Each theme provides colors for all coloring modes:

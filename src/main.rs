@@ -38,7 +38,7 @@ use std::env;
 
 // For WASM builds, embed default PDB data
 #[cfg(target_arch = "wasm32")]
-const DEFAULT_PDB_DATA: &str = include_str!("../data/1G2F.pdb");
+const DEFAULT_PDB_DATA: &str = include_str!("../data/default.pdb");
 
 #[macroquad::main("protdot")]
 async fn main() {
