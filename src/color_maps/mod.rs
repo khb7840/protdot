@@ -15,8 +15,8 @@ pub struct ColorMaps {
 impl ColorMaps {
     pub fn new() -> Self {
         let themes = create_builtin_themes();
-
-        Self {
+        
+        Self { 
             themes,
             current_theme_index: 0,
             mapping_index: 0,
@@ -24,20 +24,20 @@ impl ColorMaps {
             mapping_rotation_aa: 0,
         }
     }
-
+    
     #[cfg(not(target_arch = "wasm32"))]
     pub fn merge_with_file(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
         use yaml_rust::YamlLoader;
-
+        
         let content = std::fs::read_to_string(path)?;
         let docs = YamlLoader::load_from_str(&content)?;
-
+        
         if docs.is_empty() {
             return Ok(());
         }
-
+        
         let doc = &docs[0];
-
+        
         // Parse elements into current theme
         if let Some(elements_node) = doc["elements"].as_hash() {
             if let Some(theme) = self.themes.get_mut(self.current_theme_index) {
@@ -50,7 +50,7 @@ impl ColorMaps {
                 }
             }
         }
-
+        
         // Parse amino_acid_groups into current theme
         if let Some(aa_groups_node) = doc["amino_acid_groups"].as_hash() {
             if let Some(theme) = self.themes.get_mut(self.current_theme_index) {
@@ -63,7 +63,7 @@ impl ColorMaps {
                 }
             }
         }
-
+        
         // Parse amino_acid_types into current theme
         if let Some(aa_types_node) = doc["amino_acid_types"].as_hash() {
             if let Some(theme) = self.themes.get_mut(self.current_theme_index) {
@@ -76,22 +76,18 @@ impl ColorMaps {
                 }
             }
         }
-
+        
         // Parse gradient colors into current theme
         if let Some(gradient_node) = doc["gradient"].as_hash() {
             if let Some(theme) = self.themes.get_mut(self.current_theme_index) {
-                if let Some(start_hex) =
-                    gradient_node.get(&yaml_rust::Yaml::String("start".to_string()))
-                {
+                if let Some(start_hex) = gradient_node.get(&yaml_rust::Yaml::String("start".to_string())) {
                     if let Some(hex_str) = start_hex.as_str() {
                         if let Some(color) = parse_hex_color(hex_str) {
                             theme.gradient_start = color;
                         }
                     }
                 }
-                if let Some(end_hex) =
-                    gradient_node.get(&yaml_rust::Yaml::String("end".to_string()))
-                {
+                if let Some(end_hex) = gradient_node.get(&yaml_rust::Yaml::String("end".to_string())) {
                     if let Some(hex_str) = end_hex.as_str() {
                         if let Some(color) = parse_hex_color(hex_str) {
                             theme.gradient_end = color;
@@ -100,20 +96,18 @@ impl ColorMaps {
                 }
             }
         }
-
+        
         // Parse themes - collect them first to insert before built-in themes
         if let Some(themes_node) = doc["themes"].as_hash() {
             let mut yaml_themes = Vec::new();
-
+            
             for (theme_name_yaml, theme_data) in themes_node {
                 if let Some(theme_name) = theme_name_yaml.as_str() {
                     // Start with default theme as base
-                    let default_theme = self
-                        .themes
-                        .get(0)
+                    let default_theme = self.themes.get(0)
                         .cloned()
                         .unwrap_or_else(|| create_builtin_themes()[0].clone());
-
+                    
                     let mut theme = Theme {
                         name: theme_name.to_string(),
                         elements: default_theme.elements,
@@ -123,7 +117,7 @@ impl ColorMaps {
                         gradient_end: default_theme.gradient_end,
                         background: default_theme.background,
                     };
-
+                    
                     // Parse theme elements
                     if let Some(elements_node) = theme_data["elements"].as_hash() {
                         for (key, value) in elements_node {
@@ -134,7 +128,7 @@ impl ColorMaps {
                             }
                         }
                     }
-
+                    
                     // Parse theme amino_acid_groups
                     if let Some(aa_groups_node) = theme_data["amino_acid_groups"].as_hash() {
                         for (key, value) in aa_groups_node {
@@ -145,7 +139,7 @@ impl ColorMaps {
                             }
                         }
                     }
-
+                    
                     // Parse theme amino_acid_types
                     if let Some(aa_types_node) = theme_data["amino_acid_types"].as_hash() {
                         for (key, value) in aa_types_node {
@@ -156,21 +150,17 @@ impl ColorMaps {
                             }
                         }
                     }
-
+                    
                     // Parse theme gradient
                     if let Some(gradient_node) = theme_data["gradient"].as_hash() {
-                        if let Some(start_hex) =
-                            gradient_node.get(&yaml_rust::Yaml::String("start".to_string()))
-                        {
+                        if let Some(start_hex) = gradient_node.get(&yaml_rust::Yaml::String("start".to_string())) {
                             if let Some(hex_str) = start_hex.as_str() {
                                 if let Some(color) = parse_hex_color(hex_str) {
                                     theme.gradient_start = color;
                                 }
                             }
                         }
-                        if let Some(end_hex) =
-                            gradient_node.get(&yaml_rust::Yaml::String("end".to_string()))
-                        {
+                        if let Some(end_hex) = gradient_node.get(&yaml_rust::Yaml::String("end".to_string())) {
                             if let Some(hex_str) = end_hex.as_str() {
                                 if let Some(color) = parse_hex_color(hex_str) {
                                     theme.gradient_end = color;
@@ -178,27 +168,27 @@ impl ColorMaps {
                             }
                         }
                     }
-
+                    
                     // Parse theme background
                     if let Some(bg_hex) = theme_data["background"].as_str() {
                         if let Some(color) = parse_hex_color(bg_hex) {
                             theme.background = color;
                         }
                     }
-
+                    
                     yaml_themes.push(theme);
                 }
             }
-
+            
             // Insert all YAML themes at the beginning (before built-in themes)
             for theme in yaml_themes.into_iter().rev() {
                 self.themes.insert(0, theme);
             }
         }
-
+        
         Ok(())
     }
-
+    
     pub fn next_theme(&mut self) {
         if !self.themes.is_empty() {
             self.current_theme_index = (self.current_theme_index + 1) % self.themes.len();
@@ -219,10 +209,10 @@ impl ColorMaps {
             self.mapping_rotation_aa = 0;
         }
     }
-
+    
     pub fn next_mapping_smart(&mut self, color_scheme: crate::types::ColorScheme) {
         use crate::types::ColorScheme;
-
+        
         // Determine step size based on which rotations affect the current color scheme:
         // - ByElement: element rotation matters, step by 1
         // - ByAminoAcidGroup: aa_group rotation matters, step by 6 to skip element rotations
@@ -233,17 +223,17 @@ impl ColorMaps {
             ColorScheme::ByAminoAcidGroup => 6, // Skip element rotations
             ColorScheme::ByAminoAcidType => 6,  // Skip element rotations
             ColorScheme::NToCGradient => 12,    // Skip to gradient direction change
-            _ => 1,                             // Element, RandomChain, Theme all use 1
+            _ => 1,  // Element, RandomChain, Theme all use 1
         };
-
+        
         self.mapping_index = (self.mapping_index + step) % 24;
         self.mapping_rotation_element = self.mapping_index % 6;
         self.mapping_rotation_aa = (self.mapping_index / 6) % 4;
     }
-
+    
     pub fn previous_mapping_smart(&mut self, color_scheme: crate::types::ColorScheme) {
         use crate::types::ColorScheme;
-
+        
         // Same step logic as next_mapping_smart
         let step = match color_scheme {
             ColorScheme::ByAminoAcidGroup => 6,
@@ -251,7 +241,7 @@ impl ColorMaps {
             ColorScheme::NToCGradient => 12,
             _ => 1,
         };
-
+        
         // Go backwards with wrapping
         self.mapping_index = if self.mapping_index >= step {
             self.mapping_index - step
@@ -261,26 +251,25 @@ impl ColorMaps {
         self.mapping_rotation_element = self.mapping_index % 6;
         self.mapping_rotation_aa = (self.mapping_index / 6) % 4;
     }
-
+    
     pub fn current_theme_name(&self) -> &str {
-        self.themes
-            .get(self.current_theme_index)
+        self.themes.get(self.current_theme_index)
             .map(|t| t.name.as_str())
             .unwrap_or("Default")
     }
-
+    
     pub fn elements(&self) -> HashMap<String, Color> {
         self.get_mapped_elements()
     }
-
+    
     fn get_mapped_elements(&self) -> HashMap<String, Color> {
         let theme = &self.themes[self.current_theme_index];
         let base_elements = &theme.elements;
-
+        
         if self.mapping_index == 0 {
             return base_elements.clone();
         }
-
+        
         // Extract colors from elements in a fixed order
         let keys = ["C", "O", "N", "S", "H", "P"];
         let mut colors: Vec<Color> = Vec::new();
@@ -289,11 +278,11 @@ impl ColorMaps {
                 colors.push(*color);
             }
         }
-
+        
         if colors.len() < 6 {
             return base_elements.clone();
         }
-
+        
         // Rotate colors based on element rotation (mapping_index % 6)
         let element_rotation = self.mapping_index % 6;
         let mut result = HashMap::new();
@@ -303,19 +292,19 @@ impl ColorMaps {
         }
         result
     }
-
+    
     pub fn aa_groups(&self) -> HashMap<String, Color> {
         self.get_mapped_aa_groups()
     }
-
+    
     fn get_mapped_aa_groups(&self) -> HashMap<String, Color> {
         let theme = &self.themes[self.current_theme_index];
         let base_groups = &theme.aa_groups;
-
+        
         if self.mapping_index == 0 {
             return base_groups.clone();
         }
-
+        
         // Extract colors from aa_groups in a fixed order (excluding Glycine)
         let keys = ["Hydrophobic", "Polar", "Positive", "Negative"];
         let mut colors: Vec<Color> = Vec::new();
@@ -324,11 +313,11 @@ impl ColorMaps {
                 colors.push(*color);
             }
         }
-
+        
         if colors.is_empty() {
             return base_groups.clone();
         }
-
+        
         // Rotate colors based on aa_group rotation (mapping_index / 6) % 4
         let aa_rotation = (self.mapping_index / 6) % 4;
         let mut result = HashMap::new();
@@ -336,19 +325,19 @@ impl ColorMaps {
             let color_idx = (i + aa_rotation) % colors.len();
             result.insert(key.to_string(), colors[color_idx]);
         }
-
+        
         // Keep Glycine unchanged
         if let Some(gly_color) = base_groups.get("Glycine") {
             result.insert("Glycine".to_string(), *gly_color);
         }
-
+        
         result
     }
-
+    
     pub fn aa_types(&self) -> &HashMap<String, Color> {
         &self.themes[self.current_theme_index].aa_types
     }
-
+    
     pub fn gradient_start(&self) -> Color {
         let theme = &self.themes[self.current_theme_index];
         // Swap gradient every 12 mappings (mapping_index / 12 determines direction)
@@ -358,7 +347,7 @@ impl ColorMaps {
             theme.gradient_end
         }
     }
-
+    
     pub fn gradient_end(&self) -> Color {
         let theme = &self.themes[self.current_theme_index];
         // Swap gradient every 12 mappings
@@ -368,7 +357,7 @@ impl ColorMaps {
             theme.gradient_start
         }
     }
-
+    
     pub fn current_background(&self) -> Color {
         self.themes[self.current_theme_index].background
     }
@@ -377,7 +366,7 @@ impl ColorMaps {
 #[cfg(not(target_arch = "wasm32"))]
 fn parse_hex_color(hex: &str) -> Option<Color> {
     let hex = hex.trim().trim_start_matches('#');
-
+    
     let (r, g, b, a) = match hex.len() {
         6 => {
             let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
@@ -394,7 +383,7 @@ fn parse_hex_color(hex: &str) -> Option<Color> {
         }
         _ => return None,
     };
-
+    
     Some(Color::from_rgba(r, g, b, a))
 }
 
@@ -403,11 +392,8 @@ pub fn color_for_chain(chain: &str, color_maps: &ColorMaps) -> Color {
 }
 
 fn chain_seed(chain: &str) -> u32 {
-    chain
-        .bytes()
-        .fold(0u32, |seed, byte| {
-            seed.wrapping_mul(37).wrapping_add(byte as u32 + 1)
-        })
+    chain.bytes()
+        .fold(0u32, |seed, byte| seed.wrapping_mul(37).wrapping_add(byte as u32 + 1))
         .max(1)
 }
 
@@ -415,49 +401,35 @@ fn chain_seed(chain: &str) -> u32 {
 pub fn seeded_random_color(seed: u32, color_maps: &ColorMaps) -> Color {
     // Get theme colors to base random colors on
     let theme = &color_maps.themes[color_maps.current_theme_index];
-
+    
     // Use gradient colors as base palette
     let start = theme.gradient_start;
     let end = theme.gradient_end;
-
+    
     // Get additional colors from aa_groups for more variety
-    let hydrophobic = theme
-        .aa_groups
-        .get("Hydrophobic")
-        .copied()
-        .unwrap_or(Color::from_rgba(255, 150, 50, 255));
-    let polar = theme
-        .aa_groups
-        .get("Polar")
-        .copied()
-        .unwrap_or(Color::from_rgba(80, 220, 100, 255));
-    let positive = theme
-        .aa_groups
-        .get("Positive")
-        .copied()
-        .unwrap_or(Color::from_rgba(50, 120, 255, 255));
-    let negative = theme
-        .aa_groups
-        .get("Negative")
-        .copied()
-        .unwrap_or(Color::from_rgba(255, 60, 60, 255));
-
+    let hydrophobic = theme.aa_groups.get("Hydrophobic").copied().unwrap_or(Color::from_rgba(255, 150, 50, 255));
+    let polar = theme.aa_groups.get("Polar").copied().unwrap_or(Color::from_rgba(80, 220, 100, 255));
+    let positive = theme.aa_groups.get("Positive").copied().unwrap_or(Color::from_rgba(50, 120, 255, 255));
+    let negative = theme.aa_groups.get("Negative").copied().unwrap_or(Color::from_rgba(255, 60, 60, 255));
+    
     // Create palette from theme colors
-    let palette = [start, end, hydrophobic, polar, positive, negative];
-
+    let palette = [
+        start, end, hydrophobic, polar, positive, negative,
+    ];
+    
     // Use seed to select and blend colors from palette
     let idx1 = (seed % 6) as usize;
     let idx2 = ((seed / 6) % 6) as usize;
     let blend_factor = ((seed / 36) % 100) as f32 / 100.0;
-
+    
     let c1 = palette[idx1];
     let c2 = palette[idx2];
-
+    
     // Blend the two selected colors
     Color::from_rgba(
         ((c1.r * (1.0 - blend_factor) + c2.r * blend_factor) * 255.0) as u8,
         ((c1.g * (1.0 - blend_factor) + c2.g * blend_factor) * 255.0) as u8,
         ((c1.b * (1.0 - blend_factor) + c2.b * blend_factor) * 255.0) as u8,
-        255,
+        255
     )
 }
