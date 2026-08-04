@@ -18,6 +18,7 @@ Interactive protein structure viewer that represents atoms or residues as colore
 	- seeded random chain colors
 	- active theme colors
 - Theme and mapping cycling at runtime
+- Six built-in visualization example presets for fast scientific storytelling
 - Optional custom color palettes from `color_palette.yaml` (desktop)
 - Built-in color picker UI for live color tuning
 - PNG and SVG export on desktop build
@@ -78,6 +79,13 @@ Press `H` to show/hide the in-app overlay.
 - `C`: cycle color scheme
 	- By Element → By AA Group → By AA Type → N→C Gradient → Random Chain → Theme
 - `B`: toggle render mode (`PerAtom` / `PerResidue`)
+- `1`-`6`: jump to curated visualization examples
+	- `1` Atom Detail
+	- `2` Chemistry Groups
+	- `3` Residue Identity
+	- `4` Sequence Flow
+	- `5` Chain Contrast
+	- `6` Theme Spotlight
 - `M`/ `Shift+M`: next/previous theme 
 - `N`/`Shift+N`: next/previous color mapping
 - `+` / `-`: increase/decrease atom/residue radius scale
@@ -94,6 +102,7 @@ Press `H` to show/hide the in-app overlay.
 
 - `H`: toggle info overlay
 - `P`: toggle color picker panel
+- Info overlay now shows chain composition, residue group hints, and preset cards for quick exploration
 
 Color picker controls:
 - `Tab`: switch category (`Background`, `Elements`, `AA Groups`)
@@ -123,6 +132,17 @@ YAML-defined themes are inserted before built-in themes, so they appear first wh
 Color format supports:
 - `#RRGGBB`
 - `#RRGGBBAA`
+
+## Visualization Examples
+
+Use the built-in presets as lightweight starting points for different scientific questions:
+
+- **Atom Detail**: inspect elemental chemistry with per-atom spheres
+- **Chemistry Groups**: cluster hydrophobic, polar, and charged residues quickly
+- **Residue Identity**: expose motif-level residue variation
+- **Sequence Flow**: emphasize N→C progression for pathway-style visuals
+- **Chain Contrast**: separate interacting chains in complexes with chain-aware colors
+- **Theme Spotlight**: produce polished screenshots with theme-forward coloring
 
 ## Known Limitations
 
