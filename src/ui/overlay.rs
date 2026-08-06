@@ -347,6 +347,12 @@ fn draw_preset_panel(
         draw_preset_row(x + 10.0, row_y, width - 20.0, preset, is_active);
         row_y += 18.0;
     }
+
+    let detail = active_index
+        .and_then(|index| VISUALIZATION_PRESETS.get(index))
+        .map(|preset| preset.description)
+        .unwrap_or("Custom view");
+    draw_single_line(detail, x + 10.0, y + 168.0, width - 20.0, 12, LIGHTGRAY);
 }
 
 fn draw_preset_row(
