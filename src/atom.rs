@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use crate::color_maps::ColorMaps;
+use macroquad::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Atom {
@@ -25,26 +25,32 @@ impl Atom {
     }
 
     pub fn get_color_by_element(element: &str, color_maps: &ColorMaps) -> Color {
-        color_maps.elements().get(element)
+        color_maps
+            .elements()
+            .get(element)
             .copied()
             .unwrap_or(Color::from_rgba(255, 105, 180, 255))
     }
-    
+
     pub fn get_color_by_amino_acid_group(residue: &str, color_maps: &ColorMaps) -> Color {
         let Some(group) = Self::amino_acid_group(residue) else {
             return Color::from_rgba(180, 180, 180, 255);
         };
-        color_maps.aa_groups().get(group)
+        color_maps
+            .aa_groups()
+            .get(group)
             .copied()
             .unwrap_or(Color::from_rgba(180, 180, 180, 255))
     }
-    
+
     pub fn get_color_by_amino_acid_type(residue: &str, color_maps: &ColorMaps) -> Color {
-        color_maps.aa_types().get(residue)
+        color_maps
+            .aa_types()
+            .get(residue)
             .copied()
             .unwrap_or(Color::from_rgba(200, 180, 150, 255))
     }
-    
+
     pub fn get_radius(element: &str) -> f32 {
         match element {
             "C" => 0.77,

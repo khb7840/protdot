@@ -12,7 +12,7 @@ impl UIState {
             show_color_picker: false,
         }
     }
-    
+
     pub fn handle_toggles(&mut self) {
         if is_key_pressed(KeyCode::H) {
             self.show_ui = !self.show_ui;

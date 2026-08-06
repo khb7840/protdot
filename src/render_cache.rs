@@ -1,8 +1,8 @@
-use macroquad::prelude::*;
-use std::collections::HashMap;
 use crate::atom::Atom;
 use crate::color_maps::ColorMaps;
 use crate::types::ColorScheme;
+use macroquad::prelude::*;
+use std::collections::HashMap;
 
 // Cache for legacy fallback rendering (transparency)
 pub struct RenderCache {
@@ -47,7 +47,7 @@ pub struct MolecularRenderer {
 impl MolecularRenderer {
     pub fn new(atoms: &[Atom]) -> Self {
         let residue_proxies = precompute_residues(atoms);
-        
+
         Self {
             atom_meshes: vec![],
             residue_meshes: vec![],
@@ -56,11 +56,11 @@ impl MolecularRenderer {
             last_radius_scale: -1.0,
             is_dirty: true,
             cache: RenderCache::new(),
-            rings: 10,  // Default: smooth spheres for atoms
+            rings: 10, // Default: smooth spheres for atoms
             slices: 10,
-            residue_rings: 20,  // Higher quality for residues (fewer objects)
+            residue_rings: 20, // Higher quality for residues (fewer objects)
             residue_slices: 20,
-            max_vertices_per_chunk: 1000,  // ~16 spheres at 10x10 quality, ~7 at 16x16
+            max_vertices_per_chunk: 1000, // ~16 spheres at 10x10 quality, ~7 at 16x16
         }
     }
 
@@ -72,10 +72,17 @@ impl MolecularRenderer {
         &mut self.cache
     }
 
-    pub fn update_meshes(&mut self, atoms: &[Atom], color_scheme: ColorScheme, color_maps: &ColorMaps, radius_scale: f32) {
-        if !self.is_dirty 
-           && self.last_color_scheme == Some(color_scheme) 
-           && (self.last_radius_scale - radius_scale).abs() < 0.001 {
+    pub fn update_meshes(
+        &mut self,
+        atoms: &[Atom],
+        color_scheme: ColorScheme,
+        color_maps: &ColorMaps,
+        radius_scale: f32,
+    ) {
+        if !self.is_dirty
+            && self.last_color_scheme == Some(color_scheme)
+            && (self.last_radius_scale - radius_scale).abs() < 0.001
+        {
             return;
         }
 
@@ -94,10 +101,12 @@ impl MolecularRenderer {
             self.max_vertices_per_chunk,
         );
 
-        let residue_data: Vec<_> = self.residue_proxies.iter()
+        let residue_data: Vec<_> = self
+            .residue_proxies
+            .iter()
             .map(|(pos, rad, _res_num, atom_idx)| (*pos, *rad, &atoms[*atom_idx]))
             .collect();
-        
+
         self.residue_meshes = build_batched_meshes(
             residue_data,
             color_scheme,
@@ -126,28 +135,36 @@ impl MolecularRenderer {
 
 fn precompute_residues(atoms: &[Atom]) -> Vec<(Vec3, f32, i32, usize)> {
     let mut temp_map: HashMap<(String, i32), Vec<usize>> = HashMap::new();
-    
+
     for (i, atom) in atoms.iter().enumerate() {
-        temp_map.entry((atom.chain.clone(), atom.residue_num)).or_default().push(i);
+        temp_map
+            .entry((atom.chain.clone(), atom.residue_num))
+            .or_default()
+            .push(i);
     }
 
-    temp_map.into_iter().map(|((chain, res_num), indices)| {
-        let center = indices.iter()
-            .fold(vec3(0.0, 0.0, 0.0), |acc, &i| acc + atoms[i].position) 
-            / indices.len() as f32;
-        
-        let radius = indices.iter()
-            .map(|&i| (atoms[i].position - center).length() + atoms[i].radius)
-            .fold(0.0f32, |max, d| max.max(d));
+    temp_map
+        .into_iter()
+        .map(|((chain, res_num), indices)| {
+            let center = indices
+                .iter()
+                .fold(vec3(0.0, 0.0, 0.0), |acc, &i| acc + atoms[i].position)
+                / indices.len() as f32;
 
-        (center, radius, res_num, indices[0])
-    }).collect()
+            let radius = indices
+                .iter()
+                .map(|&i| (atoms[i].position - center).length() + atoms[i].radius)
+                .fold(0.0f32, |max, d| max.max(d));
+
+            (center, radius, res_num, indices[0])
+        })
+        .collect()
 }
 
 fn build_batched_meshes(
-    items: Vec<(Vec3, f32, &Atom)>, 
-    color_scheme: ColorScheme, 
-    color_maps: &ColorMaps, 
+    items: Vec<(Vec3, f32, &Atom)>,
+    color_scheme: ColorScheme,
+    color_maps: &ColorMaps,
     scale: f32,
     min_res: f32,
     max_res: f32,
@@ -157,23 +174,30 @@ fn build_batched_meshes(
 ) -> Vec<Mesh> {
     let verts_per_sphere = (rings + 1) * (slices + 1);
     let max_spheres_per_chunk = max_vertices_per_chunk / verts_per_sphere;
-    
+
     let mut meshes = Vec::new();
-    
+
     for chunk in items.chunks(max_spheres_per_chunk) {
         let mut vertices = Vec::with_capacity(chunk.len() * verts_per_sphere);
         let mut indices = Vec::with_capacity(chunk.len() * rings * slices * 6);
 
         for (pos, radius, atom) in chunk {
             let r = radius * scale;
-            let color = crate::ui::rendering::get_color(color_scheme, atom, atom.residue_num, min_res, max_res, color_maps);
-            
+            let color = crate::ui::rendering::get_color(
+                color_scheme,
+                atom,
+                atom.residue_num,
+                min_res,
+                max_res,
+                color_maps,
+            );
+
             let start_index = vertices.len() as u16;
 
             for i in 0..=rings {
                 let v = i as f32 / rings as f32;
                 let phi = v * std::f32::consts::PI;
-                
+
                 for j in 0..=slices {
                     let u = j as f32 / slices as f32;
                     let theta = u * std::f32::consts::PI * 2.0;
@@ -214,9 +238,13 @@ fn build_batched_meshes(
                 }
             }
         }
-        
-        meshes.push(Mesh { vertices, indices, texture: None });
+
+        meshes.push(Mesh {
+            vertices,
+            indices,
+            texture: None,
+        });
     }
-    
+
     meshes
 }

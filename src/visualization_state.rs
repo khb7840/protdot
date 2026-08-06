@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
 use crate::color_maps::ColorMaps;
 use crate::types::{ColorScheme, RenderMode};
+use macroquad::prelude::*;
 
 pub struct VisualizationState {
     pub color_scheme: ColorScheme,
@@ -22,7 +22,7 @@ impl VisualizationState {
     pub fn default_radius_scale() -> f32 {
         #[cfg(target_arch = "wasm32")]
         let radius_scale = 0.3;
-        
+
         #[cfg(not(target_arch = "wasm32"))]
         let radius_scale = 1.0;
 
@@ -32,7 +32,7 @@ impl VisualizationState {
     pub fn default_render_mode() -> RenderMode {
         #[cfg(target_arch = "wasm32")]
         let render_mode = RenderMode::PerResidue;
-        
+
         #[cfg(not(target_arch = "wasm32"))]
         let render_mode = RenderMode::PerAtom;
 
@@ -42,10 +42,10 @@ impl VisualizationState {
     pub fn new() -> Self {
         let radius_scale = Self::default_radius_scale();
         let render_mode = Self::default_render_mode();
-        
+
         let color_maps = ColorMaps::new();
         let bg_color = color_maps.current_background();
-        
+
         Self {
             color_scheme: ColorScheme::ByElement,
             render_mode,
@@ -62,11 +62,11 @@ impl VisualizationState {
             initial_camera_pos: vec3(0.0, 0.0, 0.0),
         }
     }
-    
+
     pub fn reset(&mut self) {
         let radius_scale = Self::default_radius_scale();
         let render_mode = Self::default_render_mode();
-        
+
         self.color_scheme = ColorScheme::ByElement;
         self.render_mode = render_mode;
         self.radius_scale = radius_scale;

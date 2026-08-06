@@ -142,7 +142,7 @@ Use the built-in presets as lightweight starting points for different scientific
 - **Residue Identity**: expose motif-level residue variation
 - **Sequence Flow**: emphasize N→C progression for pathway-style visuals
 - **Chain Contrast**: separate interacting chains in complexes with chain-aware colors
-- **Theme Spotlight**: produce polished screenshots with theme-forward coloring
+- **Theme Spotlight**: explore theme palettes and mapping remixes for polished screenshots
 
 ## Known Limitations
 

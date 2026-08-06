@@ -75,7 +75,7 @@ pub const VISUALIZATION_PRESETS: [VisualizationPreset; 6] = [
     VisualizationPreset {
         key: "6",
         name: "Theme Spotlight",
-        description: "Theme-driven atoms for polished screenshots and demos.",
+        description: "Theme palettes and mappings for polished screenshots and demos.",
         color_scheme: ColorScheme::Theme,
         render_mode: RenderMode::PerAtom,
         radius_multiplier: 0.95,
