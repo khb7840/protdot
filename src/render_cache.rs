@@ -2,12 +2,11 @@ use crate::atom::Atom;
 use crate::color_maps::ColorMaps;
 use crate::types::ColorScheme;
 use macroquad::prelude::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // Cache for legacy fallback rendering (transparency)
 pub struct RenderCache {
     pub atom_data: Vec<(Vec3, f32, Color)>,
-    pub residue_map: HashMap<i32, Vec<usize>>,
     pub residue_data: Vec<(i32, Vec3, f32, Color)>,
 }
 
@@ -15,23 +14,29 @@ impl RenderCache {
     pub fn new() -> Self {
         Self {
             atom_data: Vec::with_capacity(65536),
-            residue_map: HashMap::with_capacity(3200),
-            residue_data: Vec::with_capacity(3200),
+            residue_data: Vec::with_capacity(6400),
         }
     }
 
     pub fn clear(&mut self) {
         self.atom_data.clear();
-        self.residue_map.clear();
         self.residue_data.clear();
     }
+}
+
+#[derive(Clone, Copy)]
+pub struct ResidueProxy {
+    pub center: Vec3,
+    pub radius: f32,
+    pub residue_num: i32,
+    pub color_atom_index: usize,
 }
 
 // Optimized batched renderer
 pub struct MolecularRenderer {
     atom_meshes: Vec<Mesh>,
     residue_meshes: Vec<Mesh>,
-    residue_proxies: Vec<(Vec3, f32, i32, usize)>,
+    residue_proxies: Vec<ResidueProxy>,
     last_color_scheme: Option<ColorScheme>,
     last_radius_scale: f32,
     is_dirty: bool,
@@ -46,7 +51,7 @@ pub struct MolecularRenderer {
 
 impl MolecularRenderer {
     pub fn new(atoms: &[Atom]) -> Self {
-        let residue_proxies = precompute_residues(atoms);
+        let residue_proxies = build_residue_proxies(atoms);
 
         Self {
             atom_meshes: vec![],
@@ -104,7 +109,7 @@ impl MolecularRenderer {
         let residue_data: Vec<_> = self
             .residue_proxies
             .iter()
-            .map(|(pos, rad, _res_num, atom_idx)| (*pos, *rad, &atoms[*atom_idx]))
+            .map(|proxy| (proxy.center, proxy.radius, &atoms[proxy.color_atom_index]))
             .collect();
 
         self.residue_meshes = build_batched_meshes(
@@ -133,32 +138,85 @@ impl MolecularRenderer {
     }
 }
 
-fn precompute_residues(atoms: &[Atom]) -> Vec<(Vec3, f32, i32, usize)> {
-    let mut temp_map: HashMap<(String, i32), Vec<usize>> = HashMap::new();
+pub fn build_residue_proxies(atoms: &[Atom]) -> Vec<ResidueProxy> {
+    let mut residues: BTreeMap<(String, i32), Vec<usize>> = BTreeMap::new();
 
     for (i, atom) in atoms.iter().enumerate() {
-        temp_map
+        residues
             .entry((atom.chain.clone(), atom.residue_num))
             .or_default()
             .push(i);
     }
 
-    temp_map
-        .into_iter()
-        .map(|((chain, res_num), indices)| {
-            let center = indices
-                .iter()
-                .fold(vec3(0.0, 0.0, 0.0), |acc, &i| acc + atoms[i].position)
-                / indices.len() as f32;
+    let mut proxies = Vec::with_capacity(residues.len() * 2);
 
-            let radius = indices
-                .iter()
-                .map(|&i| (atoms[i].position - center).length() + atoms[i].radius)
-                .fold(0.0f32, |max, d| max.max(d));
+    for ((_chain_id, res_num), indices) in residues {
+        if indices.is_empty() {
+            continue;
+        }
 
-            (center, radius, res_num, indices[0])
-        })
-        .collect()
+        let mut backbone_indices = Vec::new();
+        let mut side_chain_indices = Vec::new();
+
+        for idx in indices.iter().copied() {
+            if Atom::is_backbone_atom_name(&atoms[idx].atom_name) {
+                backbone_indices.push(idx);
+            } else {
+                side_chain_indices.push(idx);
+            }
+        }
+
+        let color_atom_index = indices[0];
+
+        if let Some(proxy) =
+            create_residue_proxy(&backbone_indices, atoms, res_num, color_atom_index)
+        {
+            proxies.push(proxy);
+        }
+
+        if let Some(proxy) =
+            create_residue_proxy(&side_chain_indices, atoms, res_num, color_atom_index)
+        {
+            proxies.push(proxy);
+        }
+
+        if backbone_indices.is_empty() && side_chain_indices.is_empty() {
+            if let Some(proxy) = create_residue_proxy(&indices, atoms, res_num, color_atom_index) {
+                proxies.push(proxy);
+            }
+        }
+    }
+
+    proxies
+}
+
+fn create_residue_proxy(
+    indices: &[usize],
+    atoms: &[Atom],
+    residue_num: i32,
+    color_atom_index: usize,
+) -> Option<ResidueProxy> {
+    let atom_count = indices.len();
+    if atom_count == 0 {
+        return None;
+    }
+
+    let center = indices
+        .iter()
+        .fold(vec3(0.0, 0.0, 0.0), |acc, &i| acc + atoms[i].position)
+        / atom_count as f32;
+
+    let radius = indices
+        .iter()
+        .map(|&i| (atoms[i].position - center).length() + atoms[i].radius)
+        .fold(0.0f32, |max, d| max.max(d));
+
+    Some(ResidueProxy {
+        center,
+        radius,
+        residue_num,
+        color_atom_index,
+    })
 }
 
 fn build_batched_meshes(

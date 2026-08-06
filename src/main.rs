@@ -176,7 +176,12 @@ async fn main() {
         set_default_camera();
 
         if ui_state.show_ui {
-            draw_info_overlay(&structure_summary, &vis_state, &anim_state);
+            draw_info_overlay(
+                &structure_summary,
+                &vis_state,
+                &anim_state,
+                ui_state.show_color_picker,
+            );
         }
 
         if ui_state.show_color_picker {

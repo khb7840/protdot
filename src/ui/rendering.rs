@@ -1,6 +1,6 @@
 use crate::atom::Atom;
 use crate::color_maps::{ColorMaps, color_for_chain};
-use crate::render_cache::{MolecularRenderer, RenderCache};
+use crate::render_cache::{MolecularRenderer, RenderCache, build_residue_proxies};
 use crate::types::{ColorScheme, RenderMode};
 use macroquad::prelude::*;
 
@@ -126,42 +126,15 @@ fn render_per_residue(
     camera_axes: (Vec3, Vec3, Vec3),
     cache: &mut RenderCache,
 ) {
-    // Group atoms by residue using pre-allocated map
-    for (idx, atom) in atoms.iter().enumerate() {
-        cache
-            .residue_map
-            .entry(atom.residue_num)
-            .or_insert_with(Vec::new)
-            .push(idx);
-    }
+    let min_res = atoms.iter().map(|a| a.residue_num).min().unwrap_or(0) as f32;
+    let max_res = atoms.iter().map(|a| a.residue_num).max().unwrap_or(1) as f32;
 
-    let min_res = cache.residue_map.keys().min().copied().unwrap_or(0) as f32;
-    let max_res = cache.residue_map.keys().max().copied().unwrap_or(1) as f32;
-
-    // Calculate residue centers and radii using pre-allocated buffer
-    for (res_num, atom_indices) in cache.residue_map.iter() {
-        if atom_indices.is_empty() {
-            continue;
-        }
-
-        let mut center = vec3(0.0, 0.0, 0.0);
-        for &idx in atom_indices {
-            center += atoms[idx].position;
-        }
-        center /= atom_indices.len() as f32;
-
-        let rotated_center = rotate_position(center, rotation, translation, camera_axes);
-
-        let mut sphere_radius = 0.0f32;
-        for &idx in atom_indices {
-            let dist = (atoms[idx].position - center).length() + atoms[idx].radius;
-            sphere_radius = sphere_radius.max(dist);
-        }
-
+    for proxy in build_residue_proxies(atoms) {
+        let rotated_center = rotate_position(proxy.center, rotation, translation, camera_axes);
         let color = get_color(
             color_scheme,
-            &atoms[atom_indices[0]],
-            *res_num,
+            &atoms[proxy.color_atom_index],
+            proxy.residue_num,
             min_res,
             max_res,
             color_maps,
@@ -169,7 +142,7 @@ fn render_per_residue(
 
         cache
             .residue_data
-            .push((*res_num, rotated_center, sphere_radius, color));
+            .push((proxy.residue_num, rotated_center, proxy.radius, color));
     }
 
     if alpha < 1.0 {

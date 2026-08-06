@@ -13,6 +13,10 @@ pub struct Atom {
 }
 
 impl Atom {
+    pub fn is_backbone_atom_name(atom_name: &str) -> bool {
+        matches!(atom_name.trim(), "N" | "CA" | "C" | "O" | "OXT")
+    }
+
     pub fn amino_acid_group(residue: &str) -> Option<&'static str> {
         match residue {
             "ALA" | "VAL" | "LEU" | "ILE" | "MET" | "PHE" | "TRP" | "PRO" => Some("Hydrophobic"),

@@ -1,8 +1,8 @@
 use crate::atom::Atom;
 use crate::color_maps::{ColorMaps, color_for_chain};
+use crate::render_cache::build_residue_proxies;
 use crate::types::{ColorScheme, RenderMode};
 use macroquad::prelude::*;
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 
@@ -157,69 +157,31 @@ fn render_svg_per_residue(
     translation: Vec3,
     tan_half_fov: f32,
 ) -> std::io::Result<()> {
-    let mut residues: HashMap<(String, i32), Vec<&Atom>> = HashMap::new();
+    let min_res = atoms.iter().map(|a| a.residue_num).min().unwrap_or(0) as f32;
+    let max_res = atoms.iter().map(|a| a.residue_num).max().unwrap_or(1) as f32;
 
-    for atom in atoms {
-        residues
-            .entry((atom.chain.clone(), atom.residue_num))
-            .or_insert_with(Vec::new)
-            .push(atom);
-    }
+    let mut residue_data: Vec<(Vec2, f32, f32, Color)> = Vec::new();
 
-    let min_res = residues
-        .keys()
-        .map(|(_, res_num)| *res_num)
-        .min()
-        .unwrap_or(0) as f32;
-    let max_res = residues
-        .keys()
-        .map(|(_, res_num)| *res_num)
-        .max()
-        .unwrap_or(1) as f32;
-
-    let mut residue_data: Vec<((String, i32), Vec2, f32, f32, Color)> = Vec::new();
-
-    for ((chain_id, res_num), res_atoms) in residues.iter() {
-        if res_atoms.is_empty() {
-            continue;
-        }
-
-        let center: Vec3 = res_atoms
-            .iter()
-            .fold(vec3(0.0, 0.0, 0.0), |acc, a| acc + a.position)
-            / res_atoms.len() as f32;
-
-        let transformed_center = apply_transform(center, rotation, translation);
+    for proxy in build_residue_proxies(atoms) {
+        let transformed_center = apply_transform(proxy.center, rotation, translation);
         let screen_pos = project_to_screen(transformed_center, camera, screen_width, screen_height);
         let depth = (transformed_center - camera.position).length();
-
-        let sphere_radius = res_atoms
-            .iter()
-            .map(|a| (a.position - center).length() + a.radius)
-            .fold(0.0f32, |max, dist| max.max(dist));
-
         let color = get_color(
             color_scheme,
-            res_atoms[0],
-            *res_num,
+            &atoms[proxy.color_atom_index],
+            proxy.residue_num,
             min_res,
             max_res,
             color_maps,
         );
 
-        residue_data.push((
-            (chain_id.clone(), *res_num),
-            screen_pos,
-            depth,
-            sphere_radius,
-            color,
-        ));
+        residue_data.push((screen_pos, depth, proxy.radius, color));
     }
 
     // Sort back to front for proper occlusion
-    residue_data.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+    residue_data.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-    for (_residue_id, screen_pos, depth, sphere_radius, color) in residue_data {
+    for (screen_pos, depth, sphere_radius, color) in residue_data {
         let scaled_radius = sphere_radius * radius_scale;
 
         let radius = if depth > 0.1 {

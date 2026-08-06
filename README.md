@@ -9,7 +9,7 @@ Interactive protein structure viewer that represents atoms or residues as colore
 ## Features
 
 - Native desktop and WebAssembly builds
-- Per-atom and per-residue rendering modes
+- Per-atom and per-residue rendering modes (residue mode uses backbone + side-chain spheres)
 - Multiple coloring modes:
 	- by element
 	- by amino-acid group
