@@ -9,6 +9,7 @@ Interactive protein structure viewer that represents atoms or residues as colore
 ## Features
 
 - Native desktop and WebAssembly builds
+- Browser-embeddable viewer controls and host-page JavaScript API
 - Per-atom and per-residue rendering modes
 - Multiple coloring modes:
 	- by element
@@ -21,6 +22,7 @@ Interactive protein structure viewer that represents atoms or residues as colore
 - Optional custom color palettes from `color_palette.yaml` (desktop)
 - Built-in color picker UI for live color tuning
 - PNG and SVG export on desktop build
+- Runtime browser loading from pasted PDB text, remote URLs, local file input, and drag/drop
 
 ## Quick Start
 
@@ -51,6 +53,23 @@ Open `http://localhost:8000`.
 Notes:
 - Web builds load `data/default.pdb` embedded at compile time.
 - `build_wasm.sh` compiles `target/wasm32-unknown-unknown/release/protdot.wasm` and copies it into `docs/`.
+- Browser controls in `docs/index.html` can swap structures at runtime without rebuilding the WASM binary.
+
+### Browser host API
+
+The web viewer exposes a global `window.ProtdotViewer` helper for host pages and notebook wrappers.
+
+Examples:
+
+```js
+await window.ProtdotViewer.loadPdbUrl("https://files.rcsb.org/download/1CRN.pdb");
+window.ProtdotViewer.loadPdbText(pdbText, "My structure");
+window.ProtdotViewer.setColorScheme(5);   // Theme
+window.ProtdotViewer.setRenderMode(1);    // Per residue
+window.ProtdotViewer.setThemeIndex(3);
+window.ProtdotViewer.setRadiusScale(0.6);
+window.ProtdotViewer.resetView();
+```
 
 ## Usage
 
@@ -128,7 +147,8 @@ Color format supports:
 
 - Parser currently processes `ATOM` lines (not a full strict PDB parser).
 - Missing/invalid PDB path on native build will panic with file-read error.
-- Web build uses an embedded default structure and does not load arbitrary local PDB files from the browser UI.
+- Web build starts with an embedded default structure.
+- Browser URL loading depends on remote CORS policy.
 - SVG export is a 2D projection (not a full scene graph export).
 
 ## License

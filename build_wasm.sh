@@ -21,9 +21,6 @@ mkdir -p docs
 echo "Copying files to docs directory..."
 cp target/wasm32-unknown-unknown/release/protdot.wasm docs/
 
-# Copy HTML file
-cp index.html docs/
-
 # Download macroquad's JS glue code
 echo "Downloading macroquad JS glue code..."
 curl -s https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js > docs/mq_js_bundle.js

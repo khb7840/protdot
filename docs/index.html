@@ -3,119 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>protdot</title>
+    <title>protdot viewer</title>
     <style>
+        :root {
+            color-scheme: dark;
+            --panel-bg: rgba(12, 18, 28, 0.88);
+            --panel-border: rgba(255, 255, 255, 0.12);
+            --accent: #61dafb;
+            --text: #f5f7fb;
+            --muted: #a9b3c5;
+            --danger: #ff8f8f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            padding: 0;
+            font-family: Inter, "Segoe UI", sans-serif;
+            background: #0b1320;
+            color: var(--text);
             overflow: hidden;
-            background: #2c3e50;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
-        #container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            width: 100vw;
-        }
-        
-        canvas {
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
+
+        #viewer-shell {
+            position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
-        #info {
+
+        #glcanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #control-panel {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.6;
+            top: 16px;
+            left: 16px;
+            width: min(360px, calc(100vw - 32px));
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 16px;
+            border-radius: 14px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
             backdrop-filter: blur(10px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
         }
-        
-        #info h2 {
-            margin: 0 0 10px 0;
-            font-size: 18px;
-            color: #3498db;
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 20px;
         }
-        
-        #info ul {
-            margin: 0;
-            padding-left: 20px;
+
+        p,
+        label,
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
         }
-        
-        #info li {
-            margin: 5px 0;
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
         }
-        
-        .key {
-            background: #34495e;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: bold;
-            color: #3498db;
+
+        .section {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
-        
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 24px;
-            text-align: center;
+
+        .grid {
+            display: grid;
+            gap: 10px;
         }
-        
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .row > * {
+            flex: 1;
+        }
+
+        input,
+        select,
+        textarea,
+        button {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            padding: 10px 12px;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .primary {
+            background: rgba(97, 218, 251, 0.18);
+            border-color: rgba(97, 218, 251, 0.35);
+        }
+
+        .range-value {
+            min-width: 48px;
+            text-align: right;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        #status {
+            min-height: 18px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        #status.error {
+            color: var(--danger);
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <div id="loading">
-            <div class="spinner"></div>
-            Loading protdot...
-        </div>
+    <div id="viewer-shell">
         <canvas id="glcanvas" tabindex="1"></canvas>
+
+        <div id="control-panel">
+            <h1>protdot</h1>
+            <p class="muted">Embeddable dot-style protein viewer for browser demos, docs, and notebook wrappers.</p>
+            <div id="status">Loading viewer…</div>
+
+            <div class="section grid">
+                <div class="row">
+                    <input id="pdb-url" type="url" placeholder="https://files.rcsb.org/download/1CRN.pdb">
+                    <button id="load-url" class="primary">Load URL</button>
+                </div>
+                <div class="row">
+                    <input id="pdb-file" type="file" accept=".pdb,.ent,.txt">
+                    <button id="load-default">Default</button>
+                </div>
+                <textarea id="pdb-text" placeholder="Paste PDB text here"></textarea>
+                <button id="load-text">Load pasted PDB text</button>
+                <p class="muted">You can also drag and drop a PDB file anywhere on the page.</p>
+            </div>
+
+            <div class="section grid">
+                <div class="row">
+                    <select id="color-scheme">
+                        <option value="0">By element</option>
+                        <option value="1">By amino-acid group</option>
+                        <option value="2">By amino-acid type</option>
+                        <option value="3">N→C gradient</option>
+                        <option value="4">Random chain</option>
+                        <option value="5">Theme</option>
+                    </select>
+                    <select id="render-mode">
+                        <option value="0">Per atom</option>
+                        <option value="1">Per residue</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <button id="prev-theme">Prev theme</button>
+                    <select id="theme-select"></select>
+                    <button id="next-theme">Next theme</button>
+                </div>
+
+                <div class="row">
+                    <label for="radius-scale">Radius scale</label>
+                    <input id="radius-scale" type="range" min="0.1" max="2.5" step="0.1" value="0.3">
+                    <span id="radius-value" class="range-value">0.3×</span>
+                </div>
+
+                <div class="row">
+                    <button id="reset-view">Reset view</button>
+                    <button id="toggle-overlay">Hide overlay</button>
+                </div>
+            </div>
+
+            <div class="section grid">
+                <div class="row">
+                    <label for="animation-enabled">Animation</label>
+                    <select id="animation-enabled">
+                        <option value="1">On</option>
+                        <option value="0">Off</option>
+                    </select>
+                    <select id="animation-mode">
+                        <option value="0">None</option>
+                        <option value="1">Rotate Y</option>
+                        <option value="2">Rotate X</option>
+                        <option value="3">Rotate Z</option>
+                        <option value="4">Rotate XY</option>
+                        <option value="5">Orbit</option>
+                        <option value="6">Figure-8</option>
+                        <option value="7">Wobble</option>
+                        <option value="8">Tumble</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <label for="animation-speed">Speed</label>
+                    <input id="animation-speed" type="range" min="0" max="5" step="0.1" value="2">
+                    <span id="animation-speed-value" class="range-value">2.0×</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <p class="muted">Host page API: <code>window.ProtdotViewer.loadPdbUrl(url)</code>, <code>loadPdbText(text)</code>, <code>setColorScheme()</code>, <code>setRenderMode()</code>, <code>setThemeIndex()</code>, <code>resetView()</code>.</p>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // Configuration
-        const loadingDiv = document.getElementById("loading");
-        const infoDiv = document.getElementById("info");
-        
-        // Show info panel when WASM is loaded
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                loadingDiv.style.display = 'none';
-                infoDiv.style.display = 'block';
-            }, 1000);
-        });
-    </script>
-
-    <!-- Load the WASM module -->
     <script src="mq_js_bundle.js"></script>
+    <script src="protdot-embed.js"></script>
     <script>load("protdot.wasm");</script>
 </body>
 </html>
